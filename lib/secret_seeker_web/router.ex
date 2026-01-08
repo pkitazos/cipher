@@ -7,5 +7,8 @@ defmodule SecretSeekerWeb.Router do
 
   scope "/api", SecretSeekerWeb do
     pipe_through :api
+
+    get "/", NewGameController, :new_game
+    get "/game/:id", GameController, :join_game
   end
 end

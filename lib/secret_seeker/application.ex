@@ -14,6 +14,8 @@ defmodule SecretSeeker.Application do
       # Start a worker by calling: SecretSeeker.Worker.start_link(arg)
       # {SecretSeeker.Worker, arg},
       # Start to serve requests, typically the last entry
+      {Registry, keys: :unique, name: SecretSeeker.GameRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: SecretSeeker.GameSupervisor},
       SecretSeekerWeb.Endpoint
     ]
 
