@@ -136,12 +136,12 @@ defmodule Cipher.GameTest do
 
     test "returns error tuple with invalid_format for non-string pattern" do
       guess = %{shape: "circle", colour: "red", pattern: :dotted, direction: "top"}
-      assert {:error, {:invalid_format, :shape}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_format, :pattern}} = Game.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_format for non-string direction" do
-      guess = %{shape: "circle", colour: :red, pattern: "dotted", direction: 123}
-      assert {:error, {:invalid_format, :colour}} = Game.convert_guess(guess)
+      guess = %{shape: "circle", colour: "red", pattern: "dotted", direction: 123}
+      assert {:error, {:invalid_format, :direction}} = Game.convert_guess(guess)
     end
   end
 
