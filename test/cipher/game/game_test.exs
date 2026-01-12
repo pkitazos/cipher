@@ -149,18 +149,18 @@ defmodule Cipher.GameTest do
     test "returns 4 when all choices match" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       assert Game.calculate_matches(guess, secret) == 4
@@ -169,18 +169,18 @@ defmodule Cipher.GameTest do
     test "returns 0 when no choices match" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess =
         MapSet.new([
-          %Choice{kind: :shape, name: :square, _ord: 1, _kind_ord: 0},
-          %Choice{kind: :colour, name: :green, _ord: 1, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :horizontal_stripes, _ord: 1, _kind_ord: 2},
-          %Choice{kind: :direction, name: :bottom, _ord: 1, _kind_ord: 3}
+          %Choice{kind: :shape, name: :square},
+          %Choice{kind: :colour, name: :green},
+          %Choice{kind: :pattern, name: :horizontal_stripes},
+          %Choice{kind: :direction, name: :bottom}
         ])
 
       assert Game.calculate_matches(guess, secret) == 0
@@ -189,18 +189,18 @@ defmodule Cipher.GameTest do
     test "returns 1 when only one choice matches" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :green, _ord: 1, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :horizontal_stripes, _ord: 1, _kind_ord: 2},
-          %Choice{kind: :direction, name: :bottom, _ord: 1, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :green},
+          %Choice{kind: :pattern, name: :horizontal_stripes},
+          %Choice{kind: :direction, name: :bottom}
         ])
 
       assert Game.calculate_matches(guess, secret) == 1
@@ -209,18 +209,18 @@ defmodule Cipher.GameTest do
     test "returns 2 when two choices match" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :horizontal_stripes, _ord: 1, _kind_ord: 2},
-          %Choice{kind: :direction, name: :bottom, _ord: 1, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :horizontal_stripes},
+          %Choice{kind: :direction, name: :bottom}
         ])
 
       assert Game.calculate_matches(guess, secret) == 2
@@ -229,18 +229,18 @@ defmodule Cipher.GameTest do
     test "returns 3 when three choices match" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :bottom, _ord: 1, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :bottom}
         ])
 
       assert Game.calculate_matches(guess, secret) == 3
@@ -249,10 +249,10 @@ defmodule Cipher.GameTest do
     test "works end-to-end" do
       secret =
         MapSet.new([
-          %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-          %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-          %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-          %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3}
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top}
         ])
 
       guess_data = %{

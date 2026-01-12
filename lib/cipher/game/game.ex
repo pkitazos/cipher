@@ -3,31 +3,31 @@ defmodule Cipher.Game do
   alias Cipher.Game.Choice
 
   @shapes [
-    %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
-    %Choice{kind: :shape, name: :square, _ord: 1, _kind_ord: 0},
-    %Choice{kind: :shape, name: :star, _ord: 2, _kind_ord: 0},
-    %Choice{kind: :shape, name: :triangle, _ord: 3, _kind_ord: 0}
+    %Choice{kind: :shape, name: :circle},
+    %Choice{kind: :shape, name: :square},
+    %Choice{kind: :shape, name: :star},
+    %Choice{kind: :shape, name: :triangle}
   ]
 
   @colours [
-    %Choice{kind: :colour, name: :red, _ord: 0, _kind_ord: 1},
-    %Choice{kind: :colour, name: :green, _ord: 1, _kind_ord: 1},
-    %Choice{kind: :colour, name: :blue, _ord: 2, _kind_ord: 1},
-    %Choice{kind: :colour, name: :yellow, _ord: 3, _kind_ord: 1}
+    %Choice{kind: :colour, name: :red},
+    %Choice{kind: :colour, name: :green},
+    %Choice{kind: :colour, name: :blue},
+    %Choice{kind: :colour, name: :yellow}
   ]
 
   @patterns [
-    %Choice{kind: :pattern, name: :vertical_stripes, _ord: 0, _kind_ord: 2},
-    %Choice{kind: :pattern, name: :horizontal_stripes, _ord: 1, _kind_ord: 2},
-    %Choice{kind: :pattern, name: :checkered, _ord: 2, _kind_ord: 2},
-    %Choice{kind: :pattern, name: :dotted, _ord: 3, _kind_ord: 2}
+    %Choice{kind: :pattern, name: :vertical_stripes},
+    %Choice{kind: :pattern, name: :horizontal_stripes},
+    %Choice{kind: :pattern, name: :checkered},
+    %Choice{kind: :pattern, name: :dotted}
   ]
 
   @directions [
-    %Choice{kind: :direction, name: :top, _ord: 0, _kind_ord: 3},
-    %Choice{kind: :direction, name: :bottom, _ord: 1, _kind_ord: 3},
-    %Choice{kind: :direction, name: :left, _ord: 2, _kind_ord: 3},
-    %Choice{kind: :direction, name: :right, _ord: 3, _kind_ord: 3}
+    %Choice{kind: :direction, name: :top},
+    %Choice{kind: :direction, name: :bottom},
+    %Choice{kind: :direction, name: :left},
+    %Choice{kind: :direction, name: :right}
   ]
 
   @choices [shape: @shapes, colour: @colours, pattern: @patterns, direction: @directions]
