@@ -32,11 +32,22 @@ defmodule SecretSeeker.Game do
   @choices [shape: @shapes, colour: @colours, pattern: @patterns, direction: @directions]
 
   # creates one giant map of repr |-> choice
-  defp get_items do
+  defp get_items_from_repr do
     @choices
     |> Enum.map(fn {_kind, options} ->
       options
       |> Enum.map(&{Choice.show(&1), &1})
+      |> Enum.into(%{})
+    end)
+    |> Enum.reduce(&Map.merge/2)
+  end
+
+  # creates one giant map of name |-> choice
+  defp get_items_from_name do
+    @choices
+    |> Enum.map(fn {_kind, options} ->
+      options
+      |> Enum.map(&{&1.name, &1})
       |> Enum.into(%{})
     end)
     |> Enum.reduce(&Map.merge/2)
@@ -50,13 +61,14 @@ defmodule SecretSeeker.Game do
   end
 
   def convert_guess!(guess) do
-    items = get_items()
+    items = get_items_from_name()
 
-    guess
-    |> String.trim()
-    |> String.split(" ")
-    |> Enum.map(&Map.fetch!(items, &1))
-    |> MapSet.new()
+    MapSet.new([
+      Map.get(items, String.to_atom(guess.shape)),
+      Map.get(items, String.to_atom(guess.colour)),
+      Map.get(items, String.to_atom(guess.pattern)),
+      Map.get(items, String.to_atom(guess.direction))
+    ])
   end
 
   def convert_guess(guess_string) do
@@ -64,48 +76,13 @@ defmodule SecretSeeker.Game do
       guess_set = convert_guess!(guess_string)
       {:ok, guess_set}
     rescue
-      _ -> {:error, :invalid_token}
+      _ -> {:error, :invalid_guess}
     end
   end
 
   def calculate_score(guess, secret) do
+    IO.inspect(secret, label: :secret)
+    IO.inspect(guess, label: :guess)
     4 - (MapSet.difference(secret, guess) |> MapSet.size())
   end
-
-  # ------------------------------------------------------------------------
-  # test functions for running game locally
-
-  def start do
-    secret =
-      @choices
-      |> Enum.map(fn elt -> Enum.at(elt.options, :rand.uniform(4) - 1) end)
-      |> MapSet.new()
-
-    seeker_guess = MapSet.new()
-
-    game_loop(secret, seeker_guess)
-  end
-
-  defp game_loop(secret, seeker_guess) when secret == seeker_guess do
-    :correct
-  end
-
-  defp game_loop(secret, seeker_guess) do
-    score = 4 - (MapSet.difference(secret, seeker_guess) |> MapSet.size())
-
-    IO.puts(score)
-
-    items = get_items()
-
-    next_seeker_guess =
-      IO.gets("What is your guess?\n")
-      |> String.trim()
-      |> String.split(" ")
-      |> Enum.map(fn elt -> Map.fetch!(items, elt) end)
-      |> MapSet.new()
-
-    game_loop(secret, next_seeker_guess)
-  end
-
-  # ------------------------------------------------------------------------
 end

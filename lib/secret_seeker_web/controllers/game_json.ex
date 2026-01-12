@@ -1,8 +1,20 @@
 defmodule SecretSeekerWeb.GameJSON do
-  @doc """
-  Joins a game
-  """
+  # For creating a game: POST /api/games
+  def show(%{game_id: id}) do
+    %{id: id, guesses: []}
+  end
+
+  # For getting game state: GET /api/games/:id
   def show(%{game: game}) do
     %{id: game.id, guesses: game.guesses}
+  end
+
+  # For submitting a guess: POST /api/games/:id/guess
+  def guess_result(%{result: :correct}) do
+    %{result: "correct", message: "You won!"}
+  end
+
+  def guess_result(%{result: {:incorrect, score}}) do
+    %{result: "incorrect", score: score}
   end
 end

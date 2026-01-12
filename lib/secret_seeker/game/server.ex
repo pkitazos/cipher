@@ -31,9 +31,9 @@ defmodule SecretSeeker.Game.Server do
     end
   end
 
-  def guess(game_id, guess_string) do
+  def guess(game_id, guess_data) do
     case Registry.lookup(SecretSeeker.GameRegistry, game_id) do
-      [{pid, _value}] -> GenServer.call(pid, {:guess, guess_string})
+      [{pid, _value}] -> GenServer.call(pid, {:guess, guess_data})
       [] -> {:error, :game_not_found}
     end
   end
@@ -56,8 +56,10 @@ defmodule SecretSeeker.Game.Server do
   end
 
   @impl true
-  def handle_call({:guess, guess_string}, _from, state) do
-    with {:ok, guess} <- Game.convert_guess(guess_string) do
+  def handle_call({:guess, guess_data}, _from, state) do
+    with {:ok, guess} <- Game.convert_guess(guess_data) do
+      IO.inspect(guess_data, label: :guess_data)
+      IO.inspect(guess, label: :guess)
       score = Game.calculate_score(guess, state.secret)
 
       updated_state = %{state | guesses: [guess | state.guesses]}
@@ -72,8 +74,8 @@ defmodule SecretSeeker.Game.Server do
           {:reply, {:incorrect, score}, updated_state, @idle_timeout}
       end
     else
-      {:error, :invalid_token} ->
-        IO.puts("[#{state.id}] GameServer: Invalid token in guess: #{guess_string}")
+      {:error, :invalid_guess} ->
+        IO.puts("[#{state.id}] GameServer: Invalid guess: #{inspect(guess_data)}")
         {:reply, {:error, :invalid_guess_format}, state}
     end
   end

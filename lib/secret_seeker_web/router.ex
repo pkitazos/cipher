@@ -8,7 +8,8 @@ defmodule SecretSeekerWeb.Router do
   scope "/api", SecretSeekerWeb do
     pipe_through :api
 
-    get "/", NewGameController, :new_game
-    get "/game/:id", GameController, :join_game
+    resources "/games", GameController, only: [:create, :show] do
+      post "/guess", GameController, :make_guess
+    end
   end
 end
