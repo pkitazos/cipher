@@ -19,4 +19,15 @@ defmodule Cipher.Game.Choice do
   def show(%Choice{name: :bottom}), do: "v"
   def show(%Choice{name: :left}), do: "<"
   def show(%Choice{name: :right}), do: ">"
+
+  def guess_to_map(guess_mapset) do
+    guess_list = MapSet.to_list(guess_mapset)
+
+    %{
+      shape: Enum.find(guess_list, &(&1.kind == :shape)).name,
+      colour: Enum.find(guess_list, &(&1.kind == :colour)).name,
+      pattern: Enum.find(guess_list, &(&1.kind == :pattern)).name,
+      direction: Enum.find(guess_list, &(&1.kind == :direction)).name
+    }
+  end
 end

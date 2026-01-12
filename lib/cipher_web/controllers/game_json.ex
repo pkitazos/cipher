@@ -1,4 +1,6 @@
 defmodule CipherWeb.GameJSON do
+  alias Cipher.Game.Choice
+
   # For creating a game: POST /api/games
   def show(%{game_id: id}) do
     %{id: id, guesses: []}
@@ -6,7 +8,10 @@ defmodule CipherWeb.GameJSON do
 
   # For getting game state: GET /api/games/:id
   def show(%{game: game}) do
-    %{id: game.id, guesses: game.guesses}
+    %{
+      id: game.id,
+      guesses: Enum.map(game.guesses, &Choice.guess_to_map/1)
+    }
   end
 
   # For submitting a guess: POST /api/games/:id/guess
