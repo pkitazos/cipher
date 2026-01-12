@@ -7,7 +7,7 @@ defmodule CipherWeb.GameControllerTest do
       conn = post(conn, ~p"/api/games")
       response = json_response(conn, 200)
 
-      assert %{"id" => game_id, "guesses" => []} = response
+      assert %{"id" => game_id, "history" => []} = response
       assert is_binary(game_id)
       assert String.length(game_id) == 36
     end
@@ -39,7 +39,7 @@ defmodule CipherWeb.GameControllerTest do
       conn_show = get(conn, ~p"/api/games/#{game_id}")
       response = json_response(conn_show, 200)
 
-      assert %{"id" => ^game_id, "status" => "active", "guesses" => []} = response
+      assert %{"id" => ^game_id, "status" => "active", "history" => []} = response
     end
 
     test "returns 404 for non-existent game", %{conn: conn} do
@@ -67,7 +67,7 @@ defmodule CipherWeb.GameControllerTest do
       conn_show = get(conn, ~p"/api/games/#{game_id}")
       response = json_response(conn_show, 200)
 
-      assert %{"id" => ^game_id, "guesses" => guesses} = response
+      assert %{"id" => ^game_id, "history" => guesses} = response
       assert length(guesses) == 1
     end
   end
@@ -207,7 +207,7 @@ defmodule CipherWeb.GameControllerTest do
       conn_show = get(conn, ~p"/api/games/#{game_id}")
       response = json_response(conn_show, 200)
 
-      assert %{"guesses" => guesses} = response
+      assert %{"history" => guesses} = response
       assert length(guesses) == 2
     end
 
@@ -262,6 +262,29 @@ defmodule CipherWeb.GameControllerTest do
       response = json_response(conn_blocked, 409)
 
       assert %{"error" => "Game already completed", "status" => "won"} = response
+    end
+
+    test "guess history includes match counts", %{conn: conn, game_id: game_id} do
+      guess_1 = %{guess: %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}}
+
+      guess_2 = %{
+        guess: %{shape: "square", colour: "blue", pattern: "checkered", direction: "left"}
+      }
+
+      post(conn, ~p"/api/games/#{game_id}/guess", guess_1)
+      post(conn, ~p"/api/games/#{game_id}/guess", guess_2)
+
+      conn_show = get(conn, ~p"/api/games/#{game_id}")
+      response = json_response(conn_show, 200)
+
+      assert %{"history" => guesses} = response
+      assert length(guesses) == 2
+
+      Enum.each(guesses, fn guess ->
+        assert Map.has_key?(guess, "matches")
+        assert is_integer(guess["matches"])
+        assert guess["matches"] >= 0 and guess["matches"] <= 4
+      end)
     end
   end
 end

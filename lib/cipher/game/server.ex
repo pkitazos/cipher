@@ -70,7 +70,7 @@ defmodule Cipher.Game.Server do
     with {:ok, guess} <- Game.convert_guess(guess_data) do
       matches = Game.calculate_matches(guess, state.secret)
 
-      updated_state = %{state | guesses: [guess | state.guesses]}
+      updated_state = %{state | guesses: [{guess, matches} | state.guesses]}
 
       cond do
         matches == 4 ->

@@ -3,7 +3,7 @@ defmodule CipherWeb.GameJSON do
 
   # For creating a game: POST /api/games
   def show(%{game_id: id}) do
-    %{id: id, guesses: []}
+    %{id: id, history: []}
   end
 
   # For getting game state: GET /api/games/:id
@@ -11,7 +11,10 @@ defmodule CipherWeb.GameJSON do
     %{
       id: game.id,
       status: Atom.to_string(game.status),
-      guesses: Enum.map(game.guesses, &Choice.guess_to_map/1)
+      history:
+        Enum.map(game.guesses, fn {guess_mapset, matches} ->
+          %{guesses: Choice.guess_to_map(guess_mapset), matches: matches}
+        end)
     }
   end
 
