@@ -74,9 +74,17 @@ defmodule Cipher.Game.Server do
           {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
       end
     else
-      {:error, :invalid_guess} ->
-        IO.puts("[#{state.id}] GameServer: Invalid guess: #{inspect(guess_data)}")
-        {:reply, {:error, :invalid_guess_format}, state}
+      {:error, {:invalid_choice, kind, value}} ->
+        IO.puts("[#{state.id}] GameServer: Invalid #{kind}: #{value}")
+        {:reply, {:error, {:invalid_choice, kind, value}}, state}
+
+      {:error, {:missing_field, kind}} ->
+        IO.puts("[#{state.id}] GameServer: Missing field: #{kind}")
+        {:reply, {:error, {:missing_field, kind}}, state}
+
+      {:error, {:invalid_format, kind}} ->
+        IO.puts("[#{state.id}] GameServer: Invalid format for #{kind}")
+        {:reply, {:error, {:invalid_format, kind}}, state}
     end
   end
 

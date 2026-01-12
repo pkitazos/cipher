@@ -31,7 +31,6 @@ defmodule Cipher.Game do
 
   @choices [shape: @shapes, colour: @colours, pattern: @patterns, direction: @directions]
 
-  # creates one giant map of name |-> choice
   defp get_items_from_name do
     @choices
     |> Enum.map(fn {_kind, options} ->
@@ -42,7 +41,26 @@ defmodule Cipher.Game do
     |> Enum.reduce(&Map.merge/2)
   end
 
-  # the server makes a guess
+  defp get_choices_by_kind(kind) do
+    @choices
+    |> Keyword.get(kind)
+    |> Enum.map(&{&1.name, &1})
+    |> Enum.into(%{})
+  end
+
+  defp validate_choice(kind, value) when is_binary(value) do
+    choices = get_choices_by_kind(kind)
+    atom_value = String.to_atom(value)
+
+    case Map.fetch(choices, atom_value) do
+      {:ok, choice} -> {:ok, choice}
+      :error -> {:error, {:invalid_choice, kind, value}}
+    end
+  end
+
+  defp validate_choice(kind, nil), do: {:error, {:missing_field, kind}}
+  defp validate_choice(kind, _), do: {:error, {:invalid_format, kind}}
+
   def initialise_secret do
     @choices
     |> Enum.map(fn {_kind, options} -> Enum.at(options, :rand.uniform(4) - 1) end)
@@ -52,20 +70,20 @@ defmodule Cipher.Game do
   def convert_guess!(guess) do
     items = get_items_from_name()
 
-    MapSet.new([
-      Map.get(items, String.to_atom(guess.shape)),
-      Map.get(items, String.to_atom(guess.colour)),
-      Map.get(items, String.to_atom(guess.pattern)),
-      Map.get(items, String.to_atom(guess.direction))
-    ])
+    shape = Map.fetch!(items, String.to_atom(guess.shape))
+    colour = Map.fetch!(items, String.to_atom(guess.colour))
+    pattern = Map.fetch!(items, String.to_atom(guess.pattern))
+    direction = Map.fetch!(items, String.to_atom(guess.direction))
+
+    MapSet.new([shape, colour, pattern, direction])
   end
 
-  def convert_guess(guess_string) do
-    try do
-      guess_set = convert_guess!(guess_string)
-      {:ok, guess_set}
-    rescue
-      _ -> {:error, :invalid_guess}
+  def convert_guess(guess) do
+    with {:ok, shape} <- validate_choice(:shape, guess.shape),
+         {:ok, colour} <- validate_choice(:colour, guess.colour),
+         {:ok, pattern} <- validate_choice(:pattern, guess.pattern),
+         {:ok, direction} <- validate_choice(:direction, guess.direction) do
+      {:ok, MapSet.new([shape, colour, pattern, direction])}
     end
   end
 
