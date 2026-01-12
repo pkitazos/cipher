@@ -1,6 +1,6 @@
-defmodule SecretSeeker.Game.Server do
+defmodule Cipher.Game.Server do
   use GenServer
-  alias SecretSeeker.Game
+  alias Cipher.Game
 
   @idle_timeout :timer.hours(1)
 
@@ -13,7 +13,7 @@ defmodule SecretSeeker.Game.Server do
       restart: :temporary
     }
 
-    case DynamicSupervisor.start_child(SecretSeeker.GameSupervisor, child_spec) do
+    case DynamicSupervisor.start_child(Cipher.GameSupervisor, child_spec) do
       {:ok, _pid} -> {:ok, game_id}
       {:error, {:already_started, _pid}} -> {:error, {:already_started, game_id}}
       {:error, reason} -> {:error, reason}
@@ -25,14 +25,14 @@ defmodule SecretSeeker.Game.Server do
   end
 
   def join_game(game_id) do
-    case Registry.lookup(SecretSeeker.GameRegistry, game_id) do
+    case Registry.lookup(Cipher.GameRegistry, game_id) do
       [{pid, _value}] -> GenServer.call(pid, :state)
       [] -> {:error, :game_not_found}
     end
   end
 
   def guess(game_id, guess_data) do
-    case Registry.lookup(SecretSeeker.GameRegistry, game_id) do
+    case Registry.lookup(Cipher.GameRegistry, game_id) do
       [{pid, _value}] -> GenServer.call(pid, {:guess, guess_data})
       [] -> {:error, :game_not_found}
     end
@@ -99,6 +99,6 @@ defmodule SecretSeeker.Game.Server do
   end
 
   def via_tuple(game_id) do
-    {:via, Registry, {SecretSeeker.GameRegistry, game_id}}
+    {:via, Registry, {Cipher.GameRegistry, game_id}}
   end
 end

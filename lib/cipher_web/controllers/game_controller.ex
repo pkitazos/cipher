@@ -1,8 +1,8 @@
-defmodule SecretSeekerWeb.GameController do
-  use SecretSeekerWeb, :controller
-  alias SecretSeeker.Game
+defmodule CipherWeb.GameController do
+  use CipherWeb, :controller
+  alias Cipher.Game
 
-  action_fallback SecretSeekerWeb.FallbackController
+  action_fallback CipherWeb.FallbackController
 
   # POST /api/games
   def create(conn, _params) do

@@ -1,5 +1,5 @@
-defmodule SecretSeeker.Game do
-  alias SecretSeeker.Game.Choice
+defmodule Cipher.Game do
+  alias Cipher.Game.Choice
 
   @shapes [
     %Choice{kind: :shape, name: :circle, _ord: 0, _kind_ord: 0},
@@ -30,17 +30,6 @@ defmodule SecretSeeker.Game do
   ]
 
   @choices [shape: @shapes, colour: @colours, pattern: @patterns, direction: @directions]
-
-  # creates one giant map of repr |-> choice
-  defp get_items_from_repr do
-    @choices
-    |> Enum.map(fn {_kind, options} ->
-      options
-      |> Enum.map(&{Choice.show(&1), &1})
-      |> Enum.into(%{})
-    end)
-    |> Enum.reduce(&Map.merge/2)
-  end
 
   # creates one giant map of name |-> choice
   defp get_items_from_name do

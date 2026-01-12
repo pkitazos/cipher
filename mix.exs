@@ -1,9 +1,9 @@
-defmodule SecretSeeker.MixProject do
+defmodule Cipher.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :secret_seeker,
+      app: :cipher,
       version: "0.1.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -19,7 +19,7 @@ defmodule SecretSeeker.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {SecretSeeker.Application, []},
+      mod: {Cipher.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -42,6 +42,7 @@ defmodule SecretSeeker.MixProject do
       {:phoenix, "~> 1.8.3"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
+      {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},

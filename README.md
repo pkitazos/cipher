@@ -1,4 +1,4 @@
-# SecretSeeker
+# Cipher
 
 To start your Phoenix server:
 

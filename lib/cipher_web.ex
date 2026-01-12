@@ -1,12 +1,12 @@
-defmodule SecretSeekerWeb do
+defmodule CipherWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, components, channels, and so on.
 
   This can be used in your application as:
 
-      use SecretSeekerWeb, :controller
-      use SecretSeekerWeb, :html
+      use CipherWeb, :controller
+      use CipherWeb, :html
 
   The definitions below will be executed for every controller,
   component, etc, so keep them short and clean, focused
@@ -39,6 +39,8 @@ defmodule SecretSeekerWeb do
     quote do
       use Phoenix.Controller, formats: [:html, :json]
 
+      use Gettext, backend: CipherWeb.Gettext
+
       import Plug.Conn
 
       unquote(verified_routes())
@@ -48,9 +50,9 @@ defmodule SecretSeekerWeb do
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
-        endpoint: SecretSeekerWeb.Endpoint,
-        router: SecretSeekerWeb.Router,
-        statics: SecretSeekerWeb.static_paths()
+        endpoint: CipherWeb.Endpoint,
+        router: CipherWeb.Router,
+        statics: CipherWeb.static_paths()
     end
   end
 

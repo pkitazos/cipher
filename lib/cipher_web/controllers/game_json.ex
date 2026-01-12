@@ -1,4 +1,4 @@
-defmodule SecretSeekerWeb.GameJSON do
+defmodule CipherWeb.GameJSON do
   # For creating a game: POST /api/games
   def show(%{game_id: id}) do
     %{id: id, guesses: []}

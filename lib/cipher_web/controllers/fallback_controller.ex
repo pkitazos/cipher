@@ -1,5 +1,5 @@
-defmodule SecretSeekerWeb.FallbackController do
-  use SecretSeekerWeb, :controller
+defmodule CipherWeb.FallbackController do
+  use CipherWeb, :controller
 
   def call(conn, {:error, :not_found}) do
     conn

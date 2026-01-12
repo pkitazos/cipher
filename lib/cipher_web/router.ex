@@ -1,11 +1,11 @@
-defmodule SecretSeekerWeb.Router do
-  use SecretSeekerWeb, :router
+defmodule CipherWeb.Router do
+  use CipherWeb, :router
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/api", SecretSeekerWeb do
+  scope "/api", CipherWeb do
     pipe_through :api
 
     resources "/games", GameController, only: [:create, :show] do

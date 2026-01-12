@@ -12,15 +12,15 @@ import Config
 # If you use `mix release`, you need to explicitly enable the server
 # by passing the PHX_SERVER=true when you start it:
 #
-#     PHX_SERVER=true bin/secret_seeker start
+#     PHX_SERVER=true bin/cipher start
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
-  config :secret_seeker, SecretSeekerWeb.Endpoint, server: true
+  config :cipher, CipherWeb.Endpoint, server: true
 end
 
-config :secret_seeker, SecretSeekerWeb.Endpoint,
+config :cipher, CipherWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
@@ -38,9 +38,9 @@ if config_env() == :prod do
 
   host = System.get_env("PHX_HOST") || "example.com"
 
-  config :secret_seeker, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  config :cipher, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
-  config :secret_seeker, SecretSeekerWeb.Endpoint,
+  config :cipher, CipherWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -56,7 +56,7 @@ if config_env() == :prod do
   # To get SSL working, you will need to add the `https` key
   # to your endpoint configuration:
   #
-  #     config :secret_seeker, SecretSeekerWeb.Endpoint,
+  #     config :cipher, CipherWeb.Endpoint,
   #       https: [
   #         ...,
   #         port: 443,
@@ -78,7 +78,7 @@ if config_env() == :prod do
   # We also recommend setting `force_ssl` in your config/prod.exs,
   # ensuring no data is ever sent via http, always redirecting to https:
   #
-  #     config :secret_seeker, SecretSeekerWeb.Endpoint,
+  #     config :cipher, CipherWeb.Endpoint,
   #       force_ssl: [hsts: true]
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.

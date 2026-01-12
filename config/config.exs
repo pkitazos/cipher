@@ -7,18 +7,18 @@
 # General application configuration
 import Config
 
-config :secret_seeker,
+config :cipher,
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
-config :secret_seeker, SecretSeekerWeb.Endpoint,
+config :cipher, CipherWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [json: SecretSeekerWeb.ErrorJSON],
+    formats: [json: CipherWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: SecretSeeker.PubSub,
+  pubsub_server: Cipher.PubSub,
   live_view: [signing_salt: "y2lnQVJT"]
 
 # Configure Elixir's Logger

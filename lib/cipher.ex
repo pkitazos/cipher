@@ -1,6 +1,6 @@
-defmodule SecretSeeker do
+defmodule Cipher do
   @moduledoc """
-  SecretSeeker keeps the contexts that define your domain
+  Cipher keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

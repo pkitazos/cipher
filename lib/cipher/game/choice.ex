@@ -1,5 +1,5 @@
-defmodule SecretSeeker.Game.Choice do
-  alias SecretSeeker.Game.Choice
+defmodule Cipher.Game.Choice do
+  alias Cipher.Game.Choice
 
   defstruct [:kind, :name, :_ord, :_kind_ord]
 
