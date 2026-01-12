@@ -59,6 +59,13 @@ defmodule Cipher.Game.Server do
   end
 
   @impl true
+  def handle_call({:guess, _guess_data}, _from, %{status: status} = state)
+      when status != :active do
+    Logger.warning("[#{state.id}] Guess blocked - game status is #{status}")
+    {:reply, {:error, {:game_not_active, status}}, state}
+  end
+
+  @impl true
   def handle_call({:guess, guess_data}, _from, state) do
     with {:ok, guess} <- Game.convert_guess(guess_data) do
       matches = Game.calculate_matches(guess, state.secret)

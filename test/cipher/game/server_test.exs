@@ -190,5 +190,24 @@ defmodule Cipher.Game.ServerTest do
         :won -> assert true
       end
     end
+
+    test "guesses are blocked after game is won" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, state} = Server.join_game(game_id)
+
+      secret_list = MapSet.to_list(state.secret)
+
+      correct_guess = %{
+        shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+        colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+        pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+        direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+      }
+
+      assert :correct = Server.guess(game_id, correct_guess)
+
+      another_guess = %{shape: "square", colour: "blue", pattern: "checkered", direction: "left"}
+      assert {:error, {:game_not_active, :won}} = Server.guess(game_id, another_guess)
+    end
   end
 end

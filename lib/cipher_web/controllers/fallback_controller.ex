@@ -19,6 +19,18 @@ defmodule CipherWeb.FallbackController do
     |> json(%{error: "Game not found"})
   end
 
+  def call(conn, {:error, {:game_not_active, :won}}) do
+    conn
+    |> put_status(:conflict)
+    |> json(%{error: "Game already completed", status: "won"})
+  end
+
+  def call(conn, {:error, {:game_not_active, :expired}}) do
+    conn
+    |> put_status(:gone)
+    |> json(%{error: "Game has expired", status: "expired"})
+  end
+
   def call(conn, {:error, {:invalid_choice, kind, value}}) do
     conn
     |> put_status(:bad_request)

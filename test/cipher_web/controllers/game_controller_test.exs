@@ -235,5 +235,33 @@ defmodule CipherWeb.GameControllerTest do
 
       assert %{"status" => "won"} = response
     end
+
+    test "returns 409 conflict when guessing on won game", %{
+      conn: conn,
+      game_id: game_id,
+      secret: secret
+    } do
+      secret_list = MapSet.to_list(secret)
+
+      correct_guess = %{
+        guess: %{
+          shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+          colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+          pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+          direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+        }
+      }
+
+      post(conn, ~p"/api/games/#{game_id}/guess", correct_guess)
+
+      another_guess = %{
+        guess: %{shape: "square", colour: "blue", pattern: "checkered", direction: "left"}
+      }
+
+      conn_blocked = post(conn, ~p"/api/games/#{game_id}/guess", another_guess)
+      response = json_response(conn_blocked, 409)
+
+      assert %{"error" => "Game already completed", "status" => "won"} = response
+    end
   end
 end
