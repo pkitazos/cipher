@@ -44,7 +44,8 @@ defmodule Cipher.Game.Server do
     state = %{
       id: game_id,
       secret: Game.initialise_secret(),
-      guesses: []
+      guesses: [],
+      status: :active
     }
 
     Logger.info("[#{game_id}] GameServer initialized with secret")
@@ -67,7 +68,8 @@ defmodule Cipher.Game.Server do
       cond do
         matches == 4 ->
           Logger.info("[#{state.id}] Guess correct!")
-          {:reply, :correct, updated_state, @idle_timeout}
+          won_state = %{updated_state | status: :won}
+          {:reply, :correct, won_state, @idle_timeout}
 
         true ->
           Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
@@ -90,8 +92,9 @@ defmodule Cipher.Game.Server do
 
   @impl true
   def handle_info(:timeout, state) do
-    Logger.info("[#{state.id}] Idle timeout, stopping")
-    {:stop, :normal, state}
+    Logger.info("[#{state.id}] Idle timeout, marking as expired")
+    expired_state = %{state | status: :expired}
+    {:noreply, expired_state}
   end
 
   @impl true

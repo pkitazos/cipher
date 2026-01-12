@@ -39,7 +39,7 @@ defmodule CipherWeb.GameControllerTest do
       conn_show = get(conn, ~p"/api/games/#{game_id}")
       response = json_response(conn_show, 200)
 
-      assert %{"id" => ^game_id, "guesses" => []} = response
+      assert %{"id" => ^game_id, "status" => "active", "guesses" => []} = response
     end
 
     test "returns 404 for non-existent game", %{conn: conn} do
@@ -209,6 +209,31 @@ defmodule CipherWeb.GameControllerTest do
 
       assert %{"guesses" => guesses} = response
       assert length(guesses) == 2
+    end
+
+    test "status changes to won after correct guess", %{
+      conn: conn,
+      game_id: game_id,
+      secret: secret
+    } do
+      secret_list = MapSet.to_list(secret)
+
+      guess_data = %{
+        guess: %{
+          shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+          colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+          pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+          direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+        }
+      }
+
+      conn_guess = post(conn, ~p"/api/games/#{game_id}/guess", guess_data)
+      assert json_response(conn_guess, 200)
+
+      conn_show = get(conn, ~p"/api/games/#{game_id}")
+      response = json_response(conn_show, 200)
+
+      assert %{"status" => "won"} = response
     end
   end
 end

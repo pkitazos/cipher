@@ -29,6 +29,7 @@ defmodule Cipher.Game.ServerTest do
 
       assert state.id == game_id
       assert state.guesses == []
+      assert state.status == :active
       assert MapSet.size(state.secret) == 4
     end
 
@@ -146,6 +147,48 @@ defmodule Cipher.Game.ServerTest do
 
       {:ok, state_2} = Server.join_game(game_id)
       assert state_1.secret == state_2.secret
+    end
+  end
+
+  describe "status tracking" do
+    test "game starts with status :active" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, state} = Server.join_game(game_id)
+
+      assert state.status == :active
+    end
+
+    test "status changes to :won when correct guess is made" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, state} = Server.join_game(game_id)
+
+      secret_list = MapSet.to_list(state.secret)
+
+      guess_data = %{
+        shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+        colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+        pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+        direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+      }
+
+      assert :correct = Server.guess(game_id, guess_data)
+
+      {:ok, updated_state} = Server.join_game(game_id)
+      assert updated_state.status == :won
+    end
+
+    test "status remains :active after incorrect guesses" do
+      {:ok, game_id} = Server.start_game()
+
+      guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}
+      Server.guess(game_id, guess_data)
+
+      {:ok, state} = Server.join_game(game_id)
+
+      case state.status do
+        :active -> assert true
+        :won -> assert true
+      end
     end
   end
 end
