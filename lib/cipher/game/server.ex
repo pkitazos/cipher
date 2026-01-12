@@ -1,5 +1,6 @@
 defmodule Cipher.Game.Server do
   use GenServer
+  require Logger
   alias Cipher.Game
 
   @idle_timeout :timer.hours(1)
@@ -46,7 +47,8 @@ defmodule Cipher.Game.Server do
       guesses: []
     }
 
-    IO.inspect(state, label: "[#{game_id}] GameServer init")
+    Logger.info("[#{game_id}] GameServer initialized with secret")
+    Logger.debug("[#{game_id}] GameServer state: #{inspect(state)}")
     {:ok, state}
   end
 
@@ -58,51 +60,49 @@ defmodule Cipher.Game.Server do
   @impl true
   def handle_call({:guess, guess_data}, _from, state) do
     with {:ok, guess} <- Game.convert_guess(guess_data) do
-      IO.inspect(guess_data, label: :guess_data)
-      IO.inspect(guess, label: :guess)
       matches = Game.calculate_matches(guess, state.secret)
 
       updated_state = %{state | guesses: [guess | state.guesses]}
 
       cond do
         matches == 4 ->
-          IO.puts("[#{state.id}] GameServer: Guess correct!")
+          Logger.info("[#{state.id}] Guess correct!")
           {:reply, :correct, updated_state, @idle_timeout}
 
         true ->
-          IO.puts("[#{state.id}] GameServer: Guess incorrect (matches: #{matches})")
+          Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
           {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
       end
     else
       {:error, {:invalid_choice, kind, value}} ->
-        IO.puts("[#{state.id}] GameServer: Invalid #{kind}: #{value}")
+        Logger.warning("[#{state.id}] Invalid #{kind}: #{value}")
         {:reply, {:error, {:invalid_choice, kind, value}}, state}
 
       {:error, {:missing_field, kind}} ->
-        IO.puts("[#{state.id}] GameServer: Missing field: #{kind}")
+        Logger.warning("[#{state.id}] Missing field: #{kind}")
         {:reply, {:error, {:missing_field, kind}}, state}
 
       {:error, {:invalid_format, kind}} ->
-        IO.puts("[#{state.id}] GameServer: Invalid format for #{kind}")
+        Logger.warning("[#{state.id}] Invalid format for #{kind}")
         {:reply, {:error, {:invalid_format, kind}}, state}
     end
   end
 
   @impl true
   def handle_info(:timeout, state) do
-    IO.puts("[#{state.id}] GameServer: Idle timeout, stopping.")
+    Logger.info("[#{state.id}] Idle timeout, stopping")
     {:stop, :normal, state}
   end
 
   @impl true
   def handle_info(msg, state) do
-    IO.inspect(msg, label: "[#{state.id}] GameServer received unexpected message")
+    Logger.warning("[#{state.id}] Received unexpected message: #{inspect(msg)}")
     {:noreply, state}
   end
 
   @impl true
   def terminate(reason, state) do
-    IO.inspect(reason, label: "[#{state.id}] GameServer terminating")
+    Logger.info("[#{state.id}] Terminating: #{inspect(reason)}")
     :ok
   end
 

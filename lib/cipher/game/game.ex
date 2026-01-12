@@ -1,4 +1,5 @@
 defmodule Cipher.Game do
+  require Logger
   alias Cipher.Game.Choice
 
   @shapes [
@@ -88,8 +89,6 @@ defmodule Cipher.Game do
   end
 
   def calculate_matches(guess, secret) do
-    IO.inspect(secret, label: :secret)
-    IO.inspect(guess, label: :guess)
     4 - (MapSet.difference(secret, guess) |> MapSet.size())
   end
 end
