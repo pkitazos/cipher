@@ -39,6 +39,13 @@ defmodule Cipher.Game.Server do
     end
   end
 
+  def reset_game(game_id) do
+    case Registry.lookup(Cipher.GameRegistry, game_id) do
+      [{pid, _value}] -> GenServer.call(pid, :reset)
+      [] -> {:error, :game_not_found}
+    end
+  end
+
   @impl true
   def init(game_id) do
     state = %{
@@ -56,6 +63,20 @@ defmodule Cipher.Game.Server do
   @impl true
   def handle_call(:state, _from, state) do
     {:reply, {:ok, state}, state}
+  end
+
+  @impl true
+  def handle_call(:reset, _from, state) do
+    Logger.info("[#{state.id}] Resetting game")
+
+    reset_state = %{
+      state
+      | secret: Game.initialise_secret(),
+        guesses: [],
+        status: :active
+    }
+
+    {:reply, {:ok, reset_state}, reset_state, @idle_timeout}
   end
 
   @impl true

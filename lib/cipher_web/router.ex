@@ -10,6 +10,7 @@ defmodule CipherWeb.Router do
 
     resources "/games", GameController, only: [:create, :show] do
       post "/guess", GameController, :make_guess
+      post "/reset", GameController, :reset
     end
   end
 end

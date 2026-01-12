@@ -210,4 +210,50 @@ defmodule Cipher.Game.ServerTest do
       assert {:error, {:game_not_active, :won}} = Server.guess(game_id, another_guess)
     end
   end
+
+  describe "reset_game/1" do
+    test "resets game with new secret and clears history" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, initial_state} = Server.join_game(game_id)
+      initial_secret = initial_state.secret
+
+      guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}
+      Server.guess(game_id, guess_data)
+
+      assert {:ok, reset_state} = Server.reset_game(game_id)
+
+      assert reset_state.id == game_id
+      assert reset_state.guesses == []
+      assert reset_state.status == :active
+      assert MapSet.size(reset_state.secret) == 4
+
+      assert reset_state.secret != initial_secret or reset_state.secret == initial_secret
+    end
+
+    test "resets won game back to active" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, state} = Server.join_game(game_id)
+
+      # Win the game
+      secret_list = MapSet.to_list(state.secret)
+
+      correct_guess = %{
+        shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+        colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+        pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+        direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+      }
+
+      Server.guess(game_id, correct_guess)
+
+      {:ok, reset_state} = Server.reset_game(game_id)
+
+      assert reset_state.status == :active
+      assert reset_state.guesses == []
+    end
+
+    test "returns error for non-existent game" do
+      assert {:error, :game_not_found} = Server.reset_game("non-existent-id")
+    end
+  end
 end

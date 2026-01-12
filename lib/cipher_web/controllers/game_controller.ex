@@ -36,4 +36,11 @@ defmodule CipherWeb.GameController do
       {:error, reason} -> {:error, reason}
     end
   end
+
+  # POST /api/games/:id/reset
+  def reset(conn, %{"game_id" => id}) do
+    with {:ok, game} <- Game.Server.reset_game(id) do
+      render(conn, :show, game: game)
+    end
+  end
 end

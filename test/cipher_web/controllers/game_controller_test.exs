@@ -287,4 +287,64 @@ defmodule CipherWeb.GameControllerTest do
       end)
     end
   end
+
+  describe "POST /api/games/:id/reset" do
+    test "resets game and returns new empty state", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games")
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      guess = %{guess: %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}}
+      post(conn, ~p"/api/games/#{game_id}/guess", guess)
+      post(conn, ~p"/api/games/#{game_id}/guess", guess)
+
+      conn_reset = post(conn, ~p"/api/games/#{game_id}/reset")
+      response = json_response(conn_reset, 200)
+
+      assert %{"id" => ^game_id, "status" => "active", "history" => []} = response
+    end
+
+    test "resets won game back to active", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games")
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      {:ok, state} = Game.Server.join_game(game_id)
+      secret_list = MapSet.to_list(state.secret)
+
+      correct_guess = %{
+        guess: %{
+          shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+          colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+          pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+          direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
+        }
+      }
+
+      post(conn, ~p"/api/games/#{game_id}/guess", correct_guess)
+
+      conn_reset = post(conn, ~p"/api/games/#{game_id}/reset")
+      response = json_response(conn_reset, 200)
+
+      assert %{"status" => "active", "history" => []} = response
+    end
+
+    test "returns 404 for non-existent game", %{conn: conn} do
+      conn = post(conn, ~p"/api/games/non-existent-id/reset")
+      response = json_response(conn, 404)
+
+      assert %{"error" => "Game not found"} = response
+    end
+
+    test "can make guesses after reset", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games")
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      post(conn, ~p"/api/games/#{game_id}/reset")
+
+      guess = %{guess: %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}}
+      conn_guess = post(conn, ~p"/api/games/#{game_id}/guess", guess)
+
+      response = json_response(conn_guess, 200)
+      assert Map.has_key?(response, "result")
+    end
+  end
 end
