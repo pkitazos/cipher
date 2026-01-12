@@ -69,7 +69,7 @@ defmodule Cipher.Game do
     end
   end
 
-  def calculate_score(guess, secret) do
+  def calculate_matches(guess, secret) do
     IO.inspect(secret, label: :secret)
     IO.inspect(guess, label: :guess)
     4 - (MapSet.difference(secret, guess) |> MapSet.size())

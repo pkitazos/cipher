@@ -32,7 +32,7 @@ defmodule CipherWeb.GameController do
 
     case Game.Server.guess(id, guess_data) do
       :correct -> render(conn, :guess_result, result: :correct)
-      {:incorrect, score} -> render(conn, :guess_result, result: {:incorrect, score})
+      {:incorrect, matches} -> render(conn, :guess_result, result: {:incorrect, matches})
       {:error, reason} -> {:error, reason}
     end
   end

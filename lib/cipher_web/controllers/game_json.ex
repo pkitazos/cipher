@@ -19,7 +19,7 @@ defmodule CipherWeb.GameJSON do
     %{result: "correct", message: "You won!"}
   end
 
-  def guess_result(%{result: {:incorrect, score}}) do
-    %{result: "incorrect", score: score}
+  def guess_result(%{result: {:incorrect, matches}}) do
+    %{result: "incorrect", matches: matches}
   end
 end

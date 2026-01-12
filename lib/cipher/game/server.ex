@@ -60,18 +60,18 @@ defmodule Cipher.Game.Server do
     with {:ok, guess} <- Game.convert_guess(guess_data) do
       IO.inspect(guess_data, label: :guess_data)
       IO.inspect(guess, label: :guess)
-      score = Game.calculate_score(guess, state.secret)
+      matches = Game.calculate_matches(guess, state.secret)
 
       updated_state = %{state | guesses: [guess | state.guesses]}
 
       cond do
-        score == 4 ->
+        matches == 4 ->
           IO.puts("[#{state.id}] GameServer: Guess correct!")
           {:reply, :correct, updated_state, @idle_timeout}
 
         true ->
-          IO.puts("[#{state.id}] GameServer: Guess incorrect (score: #{score})")
-          {:reply, {:incorrect, score}, updated_state, @idle_timeout}
+          IO.puts("[#{state.id}] GameServer: Guess incorrect (matches: #{matches})")
+          {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
       end
     else
       {:error, :invalid_guess} ->
