@@ -31,7 +31,7 @@ defmodule CipherWeb.GameController do
     guess_data = %{shape: shape, colour: colour, pattern: pattern, direction: direction}
 
     case Game.Server.guess(id, guess_data) do
-      :correct -> render(conn, :guess_result, result: :correct)
+      {:correct, matches} -> render(conn, :guess_result, result: {:correct, matches})
       {:incorrect, matches} -> render(conn, :guess_result, result: {:incorrect, matches})
       {:error, reason} -> {:error, reason}
     end

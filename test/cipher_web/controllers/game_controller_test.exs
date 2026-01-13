@@ -101,7 +101,7 @@ defmodule CipherWeb.GameControllerTest do
       conn = post(conn, ~p"/api/games/#{game_id}/guess", guess_data)
       response = json_response(conn, 200)
 
-      assert %{"result" => "correct", "message" => "You won!"} = response
+      assert %{"result" => "correct", "matches" => 4} = response
     end
 
     test "returns incorrect with matches count for partial match", %{conn: conn, game_id: game_id} do

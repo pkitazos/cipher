@@ -97,7 +97,7 @@ defmodule Cipher.Game.Server do
         matches == 4 ->
           Logger.info("[#{state.id}] Guess correct!")
           won_state = %{updated_state | status: :won}
-          {:reply, :correct, won_state, @idle_timeout}
+          {:reply, {:correct, 4}, won_state, @idle_timeout}
 
         true ->
           Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")

@@ -56,7 +56,7 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert :correct = Server.guess(game_id, guess_data)
+      assert {:correct, 4} = Server.guess(game_id, guess_data)
     end
 
     test "returns {:incorrect, matches} with correct match count", %{game_id: game_id} do
@@ -171,7 +171,7 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert :correct = Server.guess(game_id, guess_data)
+      assert {:correct, 4} = Server.guess(game_id, guess_data)
 
       {:ok, updated_state} = Server.join_game(game_id)
       assert updated_state.status == :won
@@ -204,7 +204,7 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert :correct = Server.guess(game_id, correct_guess)
+      assert {:correct, 4} = Server.guess(game_id, correct_guess)
 
       another_guess = %{shape: "square", colour: "blue", pattern: "checkered", direction: "left"}
       assert {:error, {:game_not_active, :won}} = Server.guess(game_id, another_guess)

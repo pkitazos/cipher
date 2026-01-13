@@ -19,8 +19,8 @@ defmodule CipherWeb.GameJSON do
   end
 
   # For submitting a guess: POST /api/games/:id/guess
-  def guess_result(%{result: :correct}) do
-    %{result: "correct", message: "You won!"}
+  def guess_result(%{result: {:correct, matches}}) do
+    %{result: "correct", matches: matches}
   end
 
   def guess_result(%{result: {:incorrect, matches}}) do
