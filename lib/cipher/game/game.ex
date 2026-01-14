@@ -30,10 +30,31 @@ defmodule Cipher.Game do
     %Choice{kind: :direction, name: :right}
   ]
 
-  @choices [shape: @shapes, colour: @colours, pattern: @patterns, direction: @directions]
+  @sizes [
+    %Choice{kind: :size, name: :tiny},
+    %Choice{kind: :size, name: :small},
+    %Choice{kind: :size, name: :medium},
+    %Choice{kind: :size, name: :large}
+  ]
+
+  @all_choices [
+    shape: @shapes,
+    colour: @colours,
+    pattern: @patterns,
+    direction: @directions,
+    size: @sizes
+  ]
+
+  @difficulty_categories %{
+    easy: [:shape, :colour, :pattern],
+    normal: [:shape, :colour, :pattern, :direction],
+    hard: [:shape, :colour, :pattern, :direction, :size]
+  }
+
+  @valid_difficulties Map.keys(@difficulty_categories)
 
   defp get_items_from_name do
-    @choices
+    @all_choices
     |> Enum.map(fn {_kind, options} ->
       options
       |> Enum.map(&{&1.name, &1})
@@ -43,10 +64,14 @@ defmodule Cipher.Game do
   end
 
   defp get_choices_by_kind(kind) do
-    @choices
+    @all_choices
     |> Keyword.get(kind)
     |> Enum.map(&{&1.name, &1})
     |> Enum.into(%{})
+  end
+
+  defp get_active_categories(difficulty) when difficulty in @valid_difficulties do
+    Map.fetch!(@difficulty_categories, difficulty)
   end
 
   defp validate_choice(kind, value) when is_binary(value) do
@@ -62,9 +87,14 @@ defmodule Cipher.Game do
   defp validate_choice(kind, nil), do: {:error, {:missing_field, kind}}
   defp validate_choice(kind, _), do: {:error, {:invalid_format, kind}}
 
-  def initialise_secret do
-    @choices
-    |> Enum.map(fn {_kind, options} -> Enum.at(options, :rand.uniform(4) - 1) end)
+  def initialise_secret(difficulty) when difficulty in @valid_difficulties do
+    active_categories = get_active_categories(difficulty)
+
+    active_categories
+    |> Enum.map(fn category ->
+      options = Keyword.fetch!(@all_choices, category)
+      Enum.at(options, :rand.uniform(length(options)) - 1)
+    end)
     |> MapSet.new()
   end
 
@@ -79,16 +109,28 @@ defmodule Cipher.Game do
     MapSet.new([shape, colour, pattern, direction])
   end
 
-  def convert_guess(guess) do
-    with {:ok, shape} <- validate_choice(:shape, guess.shape),
-         {:ok, colour} <- validate_choice(:colour, guess.colour),
-         {:ok, pattern} <- validate_choice(:pattern, guess.pattern),
-         {:ok, direction} <- validate_choice(:direction, guess.direction) do
-      {:ok, MapSet.new([shape, colour, pattern, direction])}
+  def convert_guess(guess, difficulty \\ :normal) when difficulty in @valid_difficulties do
+    active_categories = get_active_categories(difficulty)
+
+    active_categories
+    |> Enum.reduce_while(
+      {:ok, []},
+      fn category, {:ok, acc} ->
+        field_value = Map.get(guess, category)
+
+        case validate_choice(category, field_value) do
+          {:ok, choice} -> {:cont, {:ok, [choice | acc]}}
+          {:error, _} = error -> {:halt, error}
+        end
+      end
+    )
+    |> case do
+      {:ok, choices} -> {:ok, MapSet.new(choices)}
+      error -> error
     end
   end
 
   def calculate_matches(guess, secret) do
-    4 - (MapSet.difference(secret, guess) |> MapSet.size())
+    MapSet.size(secret) - (MapSet.difference(secret, guess) |> MapSet.size())
   end
 end

@@ -256,4 +256,74 @@ defmodule Cipher.Game.ServerTest do
       assert {:error, :game_not_found} = Server.reset_game("non-existent-id")
     end
   end
+
+  describe "difficulty levels" do
+    test "creates game with easy difficulty" do
+      {:ok, game_id} = Server.start_game(:easy)
+      {:ok, state} = Server.join_game(game_id)
+
+      assert state.difficulty == :easy
+      assert MapSet.size(state.secret) == 3
+    end
+
+    test "creates game with normal difficulty by default" do
+      {:ok, game_id} = Server.start_game()
+      {:ok, state} = Server.join_game(game_id)
+
+      assert state.difficulty == :normal
+      assert MapSet.size(state.secret) == 4
+    end
+
+    test "creates game with hard difficulty" do
+      {:ok, game_id} = Server.start_game(:hard)
+      {:ok, state} = Server.join_game(game_id)
+
+      assert state.difficulty == :hard
+      assert MapSet.size(state.secret) == 5
+    end
+
+    test "easy game accepts guesses without direction" do
+      {:ok, game_id} = Server.start_game(:easy)
+
+      guess_data = %{
+        shape: "circle",
+        colour: "red",
+        pattern: "dotted",
+        direction: nil,
+        size: nil
+      }
+
+      result = Server.guess(game_id, guess_data)
+      assert result in [{:incorrect, 0}, {:incorrect, 1}, {:incorrect, 2}, {:correct, 3}]
+    end
+
+    test "hard game requires size field" do
+      {:ok, game_id} = Server.start_game(:hard)
+      {:ok, state} = Server.join_game(game_id)
+
+      secret_list = MapSet.to_list(state.secret)
+
+      correct_guess = %{
+        shape: Enum.find(secret_list, &(&1.kind == :shape)).name |> Atom.to_string(),
+        colour: Enum.find(secret_list, &(&1.kind == :colour)).name |> Atom.to_string(),
+        pattern: Enum.find(secret_list, &(&1.kind == :pattern)).name |> Atom.to_string(),
+        direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string(),
+        size: Enum.find(secret_list, &(&1.kind == :size)).name |> Atom.to_string()
+      }
+
+      assert {:correct, 5} = Server.guess(game_id, correct_guess)
+    end
+
+    test "reset preserves difficulty level" do
+      {:ok, game_id} = Server.start_game(:hard)
+      {:ok, initial_state} = Server.join_game(game_id)
+
+      assert initial_state.difficulty == :hard
+
+      {:ok, reset_state} = Server.reset_game(game_id)
+
+      assert reset_state.difficulty == :hard
+      assert MapSet.size(reset_state.secret) == 5
+    end
+  end
 end

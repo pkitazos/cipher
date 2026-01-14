@@ -266,4 +266,154 @@ defmodule Cipher.GameTest do
       assert Game.calculate_matches(guess, secret) == 4
     end
   end
+
+  describe "difficulty levels" do
+    test "easy difficulty generates secret with 3 choices (no direction)" do
+      secret = Game.initialise_secret(:easy)
+      assert MapSet.size(secret) == 3
+
+      choices_list = MapSet.to_list(secret)
+      kinds = Enum.map(choices_list, & &1.kind)
+
+      assert :shape in kinds
+      assert :colour in kinds
+      assert :pattern in kinds
+      refute :direction in kinds
+      refute :size in kinds
+    end
+
+    test "normal difficulty generates secret with 4 choices (default)" do
+      secret = Game.initialise_secret(:normal)
+      assert MapSet.size(secret) == 4
+
+      choices_list = MapSet.to_list(secret)
+      kinds = Enum.map(choices_list, & &1.kind)
+
+      assert :shape in kinds
+      assert :colour in kinds
+      assert :pattern in kinds
+      assert :direction in kinds
+      refute :size in kinds
+    end
+
+    test "hard difficulty generates secret with 5 choices (adds size)" do
+      secret = Game.initialise_secret(:hard)
+      assert MapSet.size(secret) == 5
+
+      choices_list = MapSet.to_list(secret)
+      kinds = Enum.map(choices_list, & &1.kind)
+
+      assert :shape in kinds
+      assert :colour in kinds
+      assert :pattern in kinds
+      assert :direction in kinds
+      assert :size in kinds
+    end
+
+    test "convert_guess handles easy difficulty (3 fields)" do
+      guess_data = %{
+        shape: "circle",
+        colour: "red",
+        pattern: "vertical_stripes",
+        direction: nil,
+        size: nil
+      }
+
+      assert {:ok, guess} = Game.convert_guess(guess_data, :easy)
+      assert MapSet.size(guess) == 3
+
+      choices_list = MapSet.to_list(guess)
+      kinds = Enum.map(choices_list, & &1.kind)
+
+      assert :shape in kinds
+      assert :colour in kinds
+      assert :pattern in kinds
+      refute :direction in kinds
+    end
+
+    test "convert_guess handles hard difficulty (5 fields)" do
+      guess_data = %{
+        shape: "circle",
+        colour: "red",
+        pattern: "vertical_stripes",
+        direction: "top",
+        size: "medium"
+      }
+
+      assert {:ok, guess} = Game.convert_guess(guess_data, :hard)
+      assert MapSet.size(guess) == 5
+
+      choices_list = MapSet.to_list(guess)
+      kinds = Enum.map(choices_list, & &1.kind)
+
+      assert :shape in kinds
+      assert :colour in kinds
+      assert :pattern in kinds
+      assert :direction in kinds
+      assert :size in kinds
+    end
+
+    test "convert_guess validates size field correctly" do
+      valid_guess = %{
+        shape: "circle",
+        colour: "red",
+        pattern: "vertical_stripes",
+        direction: "top",
+        size: "tiny"
+      }
+
+      assert {:ok, _} = Game.convert_guess(valid_guess, :hard)
+
+      invalid_guess = %{
+        shape: "circle",
+        colour: "red",
+        pattern: "vertical_stripes",
+        direction: "top",
+        size: "invalid"
+      }
+
+      assert {:error, {:invalid_choice, :size, "invalid"}} =
+               Game.convert_guess(invalid_guess, :hard)
+    end
+
+    test "calculate_matches works for easy difficulty" do
+      secret =
+        MapSet.new([
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes}
+        ])
+
+      guess =
+        MapSet.new([
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes}
+        ])
+
+      assert Game.calculate_matches(guess, secret) == 3
+    end
+
+    test "calculate_matches works for hard difficulty" do
+      secret =
+        MapSet.new([
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top},
+          %Choice{kind: :size, name: :medium}
+        ])
+
+      guess =
+        MapSet.new([
+          %Choice{kind: :shape, name: :circle},
+          %Choice{kind: :colour, name: :red},
+          %Choice{kind: :pattern, name: :vertical_stripes},
+          %Choice{kind: :direction, name: :top},
+          %Choice{kind: :size, name: :medium}
+        ])
+
+      assert Game.calculate_matches(guess, secret) == 5
+    end
+  end
 end

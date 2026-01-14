@@ -5,12 +5,12 @@ defmodule Cipher.Game.Server do
 
   @idle_timeout :timer.hours(1)
 
-  def start_game do
+  def start_game(difficulty) do
     game_id = UUID.uuid4()
 
     child_spec = %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [game_id]},
+      start: {__MODULE__, :start_link, [game_id, difficulty]},
       restart: :temporary
     }
 
@@ -21,8 +21,8 @@ defmodule Cipher.Game.Server do
     end
   end
 
-  def start_link(game_id) do
-    GenServer.start_link(__MODULE__, game_id, name: via_tuple(game_id))
+  def start_link(game_id, difficulty) do
+    GenServer.start_link(__MODULE__, {game_id, difficulty}, name: via_tuple(game_id))
   end
 
   def join_game(game_id) do
@@ -47,22 +47,23 @@ defmodule Cipher.Game.Server do
   end
 
   @impl true
-  def init(game_id) do
+  def init({game_id, difficulty}) do
     state = %{
       id: game_id,
-      secret: Game.initialise_secret(),
+      difficulty: difficulty,
+      secret: Game.initialise_secret(difficulty),
       guesses: [],
       status: :active
     }
 
-    Logger.info("[#{game_id}] GameServer initialized with secret")
+    Logger.info("[#{game_id}] GameServer initialized with difficulty #{difficulty}")
     Logger.debug("[#{game_id}] GameServer state: #{inspect(state)}")
-    {:ok, state}
+    {:ok, state, @idle_timeout}
   end
 
   @impl true
   def handle_call(:state, _from, state) do
-    {:reply, {:ok, state}, state}
+    {:reply, {:ok, state}, state, @idle_timeout}
   end
 
   @impl true
@@ -71,7 +72,7 @@ defmodule Cipher.Game.Server do
 
     reset_state = %{
       state
-      | secret: Game.initialise_secret(),
+      | secret: Game.initialise_secret(state.difficulty),
         guesses: [],
         status: :active
     }
@@ -83,21 +84,22 @@ defmodule Cipher.Game.Server do
   def handle_call({:guess, _guess_data}, _from, %{status: status} = state)
       when status != :active do
     Logger.warning("[#{state.id}] Guess blocked - game status is #{status}")
-    {:reply, {:error, {:game_not_active, status}}, state}
+    {:reply, {:error, {:game_not_active, status}}, state, @idle_timeout}
   end
 
   @impl true
   def handle_call({:guess, guess_data}, _from, state) do
-    with {:ok, guess} <- Game.convert_guess(guess_data) do
+    with {:ok, guess} <- Game.convert_guess(guess_data, state.difficulty) do
       matches = Game.calculate_matches(guess, state.secret)
+      secret_size = MapSet.size(state.secret)
 
       updated_state = %{state | guesses: [{guess, matches} | state.guesses]}
 
       cond do
-        matches == 4 ->
+        matches == secret_size ->
           Logger.info("[#{state.id}] Guess correct!")
           won_state = %{updated_state | status: :won}
-          {:reply, {:correct, 4}, won_state, @idle_timeout}
+          {:reply, {:correct, secret_size}, won_state, @idle_timeout}
 
         true ->
           Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
@@ -106,15 +108,15 @@ defmodule Cipher.Game.Server do
     else
       {:error, {:invalid_choice, kind, value}} ->
         Logger.warning("[#{state.id}] Invalid #{kind}: #{value}")
-        {:reply, {:error, {:invalid_choice, kind, value}}, state}
+        {:reply, {:error, {:invalid_choice, kind, value}}, state, @idle_timeout}
 
       {:error, {:missing_field, kind}} ->
         Logger.warning("[#{state.id}] Missing field: #{kind}")
-        {:reply, {:error, {:missing_field, kind}}, state}
+        {:reply, {:error, {:missing_field, kind}}, state, @idle_timeout}
 
       {:error, {:invalid_format, kind}} ->
         Logger.warning("[#{state.id}] Invalid format for #{kind}")
-        {:reply, {:error, {:invalid_format, kind}}, state}
+        {:reply, {:error, {:invalid_format, kind}}, state, @idle_timeout}
     end
   end
 

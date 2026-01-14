@@ -10,6 +10,7 @@ defmodule CipherWeb.GameJSON do
   def show(%{game: game}) do
     %{
       id: game.id,
+      difficulty: Atom.to_string(game.difficulty),
       status: Atom.to_string(game.status),
       history:
         Enum.map(game.guesses, fn {guess_mapset, matches} ->
