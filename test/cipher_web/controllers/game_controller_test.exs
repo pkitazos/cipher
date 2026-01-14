@@ -347,4 +347,64 @@ defmodule CipherWeb.GameControllerTest do
       assert Map.has_key?(response, "result")
     end
   end
+
+  describe "POST /api/games/:id/level_up" do
+    test "creates new game with next difficulty level", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games", %{difficulty: "easy"})
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      conn_level_up = post(conn, ~p"/api/games/#{game_id}/level_up")
+      response = json_response(conn_level_up, 200)
+
+      assert %{"id" => new_game_id, "history" => []} = response
+      assert new_game_id != game_id
+
+      {:ok, new_state} = Game.Server.join_game(new_game_id)
+      assert new_state.difficulty == :normal
+    end
+
+    test "level up from normal to hard", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games", %{difficulty: "normal"})
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      conn_level_up = post(conn, ~p"/api/games/#{game_id}/level_up")
+      %{"id" => new_game_id} = json_response(conn_level_up, 200)
+
+      {:ok, new_state} = Game.Server.join_game(new_game_id)
+      assert new_state.difficulty == :hard
+    end
+
+    test "returns 400 when already at max difficulty", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games", %{difficulty: "hard"})
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      conn_level_up = post(conn, ~p"/api/games/#{game_id}/level_up")
+      response = json_response(conn_level_up, 400)
+
+      assert %{"error" => "Already at maximum difficulty"} = response
+    end
+
+    test "returns 404 for non-existent game", %{conn: conn} do
+      conn = post(conn, ~p"/api/games/non-existent-id/level_up")
+      response = json_response(conn, 404)
+
+      assert %{"error" => "Game not found"} = response
+    end
+
+    test "new game has fresh state", %{conn: conn} do
+      conn_create = post(conn, ~p"/api/games", %{difficulty: "easy"})
+      %{"id" => game_id} = json_response(conn_create, 200)
+
+      guess = %{guess: %{shape: "circle", colour: "red", pattern: "dotted"}}
+      post(conn, ~p"/api/games/#{game_id}/guess", guess)
+
+      conn_level_up = post(conn, ~p"/api/games/#{game_id}/level_up")
+      %{"id" => new_game_id} = json_response(conn_level_up, 200)
+
+      conn_show = get(conn, ~p"/api/games/#{new_game_id}")
+      response = json_response(conn_show, 200)
+
+      assert %{"history" => [], "status" => "active"} = response
+    end
+  end
 end

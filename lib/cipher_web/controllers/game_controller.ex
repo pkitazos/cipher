@@ -54,4 +54,11 @@ defmodule CipherWeb.GameController do
       render(conn, :show, game: game)
     end
   end
+
+  # POST /api/games/:id/level_up
+  def level_up(conn, %{"game_id" => id}) do
+    with {:ok, new_game_id} <- Game.Server.level_up(id) do
+      render(conn, :show, game_id: new_game_id)
+    end
+  end
 end

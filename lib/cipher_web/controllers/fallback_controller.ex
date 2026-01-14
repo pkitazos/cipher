@@ -49,6 +49,12 @@ defmodule CipherWeb.FallbackController do
     |> json(%{error: "Invalid format for field: #{kind}"})
   end
 
+  def call(conn, {:error, :max_difficulty}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Already at maximum difficulty"})
+  end
+
   # Catch-all for unexpected errors
   def call(conn, {:error, _reason}) do
     conn

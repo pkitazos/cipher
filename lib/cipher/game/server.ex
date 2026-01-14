@@ -5,6 +5,8 @@ defmodule Cipher.Game.Server do
 
   @idle_timeout :timer.hours(1)
 
+  def start_game(difficulty \\ :normal)
+
   def start_game(difficulty) do
     game_id = UUID.uuid4()
 
@@ -46,6 +48,20 @@ defmodule Cipher.Game.Server do
     end
   end
 
+  def level_up(game_id) do
+    with [{pid, _value}] <- Registry.lookup(Cipher.GameRegistry, game_id),
+         {:ok, current_difficulty} <- GenServer.call(pid, :get_difficulty),
+         {:ok, next_difficulty} <- Game.next_difficulty(current_difficulty) do
+      start_game(next_difficulty)
+    else
+      [] ->
+        {:error, :game_not_found}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @impl true
   def init({game_id, difficulty}) do
     state = %{
@@ -64,6 +80,11 @@ defmodule Cipher.Game.Server do
   @impl true
   def handle_call(:state, _from, state) do
     {:reply, {:ok, state}, state, @idle_timeout}
+  end
+
+  @impl true
+  def handle_call(:get_difficulty, _from, state) do
+    {:reply, {:ok, state.difficulty}, state, @idle_timeout}
   end
 
   @impl true

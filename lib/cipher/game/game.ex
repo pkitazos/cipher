@@ -53,6 +53,11 @@ defmodule Cipher.Game do
 
   @valid_difficulties Map.keys(@difficulty_categories)
 
+  def next_difficulty(:easy), do: {:ok, :normal}
+  def next_difficulty(:normal), do: {:ok, :hard}
+  def next_difficulty(:hard), do: {:error, :max_difficulty}
+  def next_difficulty(_), do: {:error, :invalid_difficulty}
+
   defp get_items_from_name do
     @all_choices
     |> Enum.map(fn {_kind, options} ->
@@ -87,6 +92,8 @@ defmodule Cipher.Game do
   defp validate_choice(kind, nil), do: {:error, {:missing_field, kind}}
   defp validate_choice(kind, _), do: {:error, {:invalid_format, kind}}
 
+  def initialise_secret(difficulty \\ :normal)
+
   def initialise_secret(difficulty) when difficulty in @valid_difficulties do
     active_categories = get_active_categories(difficulty)
 
@@ -109,7 +116,9 @@ defmodule Cipher.Game do
     MapSet.new([shape, colour, pattern, direction])
   end
 
-  def convert_guess(guess, difficulty \\ :normal) when difficulty in @valid_difficulties do
+  def convert_guess(guess, difficulty \\ :normal)
+
+  def convert_guess(guess, difficulty) when difficulty in @valid_difficulties do
     active_categories = get_active_categories(difficulty)
 
     active_categories

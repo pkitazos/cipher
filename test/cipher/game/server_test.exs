@@ -326,4 +326,56 @@ defmodule Cipher.Game.ServerTest do
       assert MapSet.size(reset_state.secret) == 5
     end
   end
+
+  describe "level_up/1" do
+    test "creates new game with next difficulty level from easy to normal" do
+      {:ok, game_id} = Server.start_game(:easy)
+      {:ok, state} = Server.join_game(game_id)
+      assert state.difficulty == :easy
+
+      {:ok, new_game_id} = Server.level_up(game_id)
+      assert new_game_id != game_id
+
+      {:ok, new_state} = Server.join_game(new_game_id)
+      assert new_state.difficulty == :normal
+      assert MapSet.size(new_state.secret) == 4
+    end
+
+    test "creates new game with next difficulty level from normal to hard" do
+      {:ok, game_id} = Server.start_game(:normal)
+
+      {:ok, new_game_id} = Server.level_up(game_id)
+      assert new_game_id != game_id
+
+      {:ok, new_state} = Server.join_game(new_game_id)
+      assert new_state.difficulty == :hard
+      assert MapSet.size(new_state.secret) == 5
+    end
+
+    test "returns error when already at max difficulty" do
+      {:ok, game_id} = Server.start_game(:hard)
+
+      assert {:error, :max_difficulty} = Server.level_up(game_id)
+    end
+
+    test "returns error for non-existent game" do
+      assert {:error, :game_not_found} = Server.level_up("non-existent-id")
+    end
+
+    test "new game from level_up has fresh state" do
+      {:ok, game_id} = Server.start_game(:easy)
+
+      guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: nil, size: nil}
+      Server.guess(game_id, guess_data)
+
+      {:ok, state} = Server.join_game(game_id)
+      assert length(state.guesses) == 1
+
+      {:ok, new_game_id} = Server.level_up(game_id)
+      {:ok, new_state} = Server.join_game(new_game_id)
+
+      assert new_state.guesses == []
+      assert new_state.status == :active
+    end
+  end
 end

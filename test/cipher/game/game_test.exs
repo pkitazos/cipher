@@ -415,5 +415,21 @@ defmodule Cipher.GameTest do
 
       assert Game.calculate_matches(guess, secret) == 5
     end
+
+    test "next_difficulty returns normal for easy" do
+      assert {:ok, :normal} = Game.next_difficulty(:easy)
+    end
+
+    test "next_difficulty returns hard for normal" do
+      assert {:ok, :hard} = Game.next_difficulty(:normal)
+    end
+
+    test "next_difficulty returns error for hard" do
+      assert {:error, :max_difficulty} = Game.next_difficulty(:hard)
+    end
+
+    test "next_difficulty returns error for invalid difficulty" do
+      assert {:error, :invalid_difficulty} = Game.next_difficulty(:invalid)
+    end
   end
 end
