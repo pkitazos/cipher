@@ -1,8 +1,34 @@
 defmodule CipherWeb.Router do
   use CipherWeb, :router
 
+  pipeline :browser do
+    # only accept HTML requests
+    plug :accepts, ["html"]
+
+    # loads the session from the cookie
+    plug :fetch_session
+
+    # enables flash messages in LiveView
+    plug :fetch_live_flash
+
+    # sets the root layout to wrap all pages
+    plug :put_root_layout, html: {CipherWeb.Layouts, :root}
+
+    # CSRF protection
+    plug :protect_from_forgery
+
+    # security headers
+    plug :put_secure_browser_headers
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  scope "/", CipherWeb do
+    pipe_through :browser
+
+    live "/", GameLive
   end
 
   scope "/api", CipherWeb do

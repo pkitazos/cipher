@@ -29,6 +29,27 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# Configure esbuild
+config :esbuild,
+  version: "0.23.0",
+  cipher: [
+    args:
+      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+
+# Configure tailwind v4
+config :tailwind,
+  version: "4.1.10",
+  cipher: [
+    args: ~w(
+        --input=css/app.css
+        --output=../priv/static/assets/app.css
+      ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

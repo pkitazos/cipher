@@ -14,7 +14,10 @@ config :cipher, CipherWeb.Endpoint,
   code_reloader: true,
   debug_errors: true,
   secret_key_base: "Z3qmA3t2l72fltt5Ijl7mwrfmO4LAyWinc2OyjB4yVNIrViC+USMUzmB92iWytN/",
-  watchers: []
+  watchers: [
+    esbuild: {Esbuild, :install_and_run, [:cipher, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:cipher, ~w(--watch)]}
+  ]
 
 # ## SSL Support
 #
