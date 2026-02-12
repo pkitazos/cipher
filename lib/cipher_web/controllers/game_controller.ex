@@ -26,7 +26,7 @@ defmodule CipherWeb.GameController do
 
   # GET /api/games/:id
   def show(conn, %{"id" => id}) do
-    with {:ok, game} <- Game.Server.join_game(id) do
+    with {:ok, game} <- Game.Server.get_client_state(id) do
       render(conn, :show, game: game)
     end
   end

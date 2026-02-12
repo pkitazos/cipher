@@ -27,9 +27,9 @@ defmodule Cipher.Game.Server do
     GenServer.start_link(__MODULE__, {game_id, difficulty}, name: via_tuple(game_id))
   end
 
-  def join_game(game_id) do
+  def get_client_state(game_id) do
     case Registry.lookup(Cipher.GameRegistry, game_id) do
-      [{pid, _value}] -> GenServer.call(pid, :state)
+      [{pid, _value}] -> GenServer.call(pid, :client_state)
       [] -> {:error, :game_not_found}
     end
   end
@@ -50,15 +50,12 @@ defmodule Cipher.Game.Server do
 
   def level_up(game_id) do
     with [{pid, _value}] <- Registry.lookup(Cipher.GameRegistry, game_id),
-         {:ok, current_difficulty} <- GenServer.call(pid, :get_difficulty),
-         {:ok, next_difficulty} <- Game.next_difficulty(current_difficulty) do
+         {:ok, game_state} <- GenServer.call(pid, :internal_state),
+         {:ok, next_difficulty} <- Game.next_difficulty(game_state.difficulty) do
       start_game(next_difficulty)
     else
-      [] ->
-        {:error, :game_not_found}
-
-      {:error, reason} ->
-        {:error, reason}
+      [] -> {:error, :game_not_found}
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -69,6 +66,7 @@ defmodule Cipher.Game.Server do
       difficulty: difficulty,
       secret: Game.initialise_secret(difficulty),
       guesses: [],
+      last_matches: nil,
       status: :active
     }
 
@@ -78,13 +76,14 @@ defmodule Cipher.Game.Server do
   end
 
   @impl true
-  def handle_call(:state, _from, state) do
+  def handle_call(:internal_state, _from, state) do
     {:reply, {:ok, state}, state, @idle_timeout}
   end
 
   @impl true
-  def handle_call(:get_difficulty, _from, state) do
-    {:reply, {:ok, state.difficulty}, state, @idle_timeout}
+  def handle_call(:client_state, _from, state) do
+    client_safe_state = Map.drop(state, [:secret])
+    {:reply, {:ok, client_safe_state}, state, @idle_timeout}
   end
 
   @impl true
@@ -95,6 +94,7 @@ defmodule Cipher.Game.Server do
       state
       | secret: Game.initialise_secret(state.difficulty),
         guesses: [],
+        last_matches: nil,
         status: :active
     }
 
@@ -114,17 +114,17 @@ defmodule Cipher.Game.Server do
     matches = Game.calculate_matches(guess, state.secret)
     secret_size = MapSet.size(state.secret)
 
-    updated_state = %{state | guesses: [{guess, matches} | state.guesses]}
+    updated_state = %{state | guesses: [{guess, matches} | state.guesses], last_matches: matches}
 
     cond do
       matches == secret_size ->
         Logger.info("[#{state.id}] Guess correct!")
         won_state = %{updated_state | status: :won}
-        {:reply, {:correct, secret_size}, won_state, @idle_timeout}
+        {:reply, {:ok, Map.drop(won_state, [:secret])}, won_state, @idle_timeout}
 
       true ->
         Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
-        {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
+        {:reply, {:ok, Map.drop(updated_state, [:secret])}, updated_state, @idle_timeout}
     end
   end
 
@@ -183,5 +183,23 @@ defmodule Cipher.Game.Server do
 
   def via_tuple(game_id) do
     {:via, Registry, {Cipher.GameRegistry, game_id}}
+  end
+
+  if Mix.env() == :test do
+    @doc """
+    Test-only function to get full internal state including secret.
+
+    DO NOT use in production code or from controllers/LiveView.
+    This function only exists in the test environment and is used to verify
+    game logic correctness in tests.
+
+    For production code, use `get_client_state/1` which filters the secret.
+    """
+    def get_internal_state(game_id) do
+      case Registry.lookup(Cipher.GameRegistry, game_id) do
+        [{pid, _value}] -> GenServer.call(pid, :internal_state)
+        [] -> {:error, :game_not_found}
+      end
+    end
   end
 end

@@ -22,10 +22,26 @@ defmodule Cipher.Game.ServerTest do
     end
   end
 
-  describe "join_game/1" do
-    test "returns {:ok, state} with initial game state for valid game_id" do
+  describe "get_client_state/1" do
+    test "returns {:ok, state} without secret for valid game_id" do
       {:ok, game_id} = Server.start_game()
-      assert {:ok, state} = Server.join_game(game_id)
+      assert {:ok, state} = Server.get_client_state(game_id)
+
+      assert state.id == game_id
+      assert state.guesses == []
+      assert state.status == :active
+      refute Map.has_key?(state, :secret)
+    end
+
+    test "returns {:error, :game_not_found} for non-existent game_id" do
+      assert {:error, :game_not_found} = Server.get_client_state("non-existent-id")
+    end
+  end
+
+  describe "get_internal_state/1 (test-only)" do
+    test "returns {:ok, state} with secret for valid game_id" do
+      {:ok, game_id} = Server.start_game()
+      assert {:ok, state} = Server.get_internal_state(game_id)
 
       assert state.id == game_id
       assert state.guesses == []
@@ -34,14 +50,14 @@ defmodule Cipher.Game.ServerTest do
     end
 
     test "returns {:error, :game_not_found} for non-existent game_id" do
-      assert {:error, :game_not_found} = Server.join_game("non-existent-id")
+      assert {:error, :game_not_found} = Server.get_internal_state("non-existent-id")
     end
   end
 
   describe "guess/2" do
     setup do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
       %{game_id: game_id, secret: state.secret}
     end
 
@@ -134,18 +150,18 @@ defmodule Cipher.Game.ServerTest do
       Server.guess(game_id, guess_1)
       Server.guess(game_id, guess_2)
 
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
       assert length(state.guesses) == 2
     end
 
     test "secret remains consistent across multiple guesses" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state_1} = Server.join_game(game_id)
+      {:ok, state_1} = Server.get_internal_state(game_id)
 
       guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}
       Server.guess(game_id, guess_data)
 
-      {:ok, state_2} = Server.join_game(game_id)
+      {:ok, state_2} = Server.get_internal_state(game_id)
       assert state_1.secret == state_2.secret
     end
   end
@@ -153,14 +169,14 @@ defmodule Cipher.Game.ServerTest do
   describe "status tracking" do
     test "game starts with status :active" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       assert state.status == :active
     end
 
     test "status changes to :won when correct guess is made" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       secret_list = MapSet.to_list(state.secret)
 
@@ -173,7 +189,7 @@ defmodule Cipher.Game.ServerTest do
 
       assert {:correct, 4} = Server.guess(game_id, guess_data)
 
-      {:ok, updated_state} = Server.join_game(game_id)
+      {:ok, updated_state} = Server.get_internal_state(game_id)
       assert updated_state.status == :won
     end
 
@@ -183,7 +199,7 @@ defmodule Cipher.Game.ServerTest do
       guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}
       Server.guess(game_id, guess_data)
 
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       case state.status do
         :active -> assert true
@@ -193,7 +209,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "guesses are blocked after game is won" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       secret_list = MapSet.to_list(state.secret)
 
@@ -214,7 +230,7 @@ defmodule Cipher.Game.ServerTest do
   describe "reset_game/1" do
     test "resets game with new secret and clears history" do
       {:ok, game_id} = Server.start_game()
-      {:ok, initial_state} = Server.join_game(game_id)
+      {:ok, initial_state} = Server.get_internal_state(game_id)
       initial_secret = initial_state.secret
 
       guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: "top"}
@@ -232,7 +248,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "resets won game back to active" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       # Win the game
       secret_list = MapSet.to_list(state.secret)
@@ -260,7 +276,7 @@ defmodule Cipher.Game.ServerTest do
   describe "difficulty levels" do
     test "creates game with easy difficulty" do
       {:ok, game_id} = Server.start_game(:easy)
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       assert state.difficulty == :easy
       assert MapSet.size(state.secret) == 3
@@ -268,7 +284,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "creates game with normal difficulty by default" do
       {:ok, game_id} = Server.start_game()
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       assert state.difficulty == :normal
       assert MapSet.size(state.secret) == 4
@@ -276,7 +292,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "creates game with hard difficulty" do
       {:ok, game_id} = Server.start_game(:hard)
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       assert state.difficulty == :hard
       assert MapSet.size(state.secret) == 5
@@ -299,7 +315,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "hard game requires size field" do
       {:ok, game_id} = Server.start_game(:hard)
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
 
       secret_list = MapSet.to_list(state.secret)
 
@@ -316,7 +332,7 @@ defmodule Cipher.Game.ServerTest do
 
     test "reset preserves difficulty level" do
       {:ok, game_id} = Server.start_game(:hard)
-      {:ok, initial_state} = Server.join_game(game_id)
+      {:ok, initial_state} = Server.get_internal_state(game_id)
 
       assert initial_state.difficulty == :hard
 
@@ -330,13 +346,13 @@ defmodule Cipher.Game.ServerTest do
   describe "level_up/1" do
     test "creates new game with next difficulty level from easy to normal" do
       {:ok, game_id} = Server.start_game(:easy)
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
       assert state.difficulty == :easy
 
       {:ok, new_game_id} = Server.level_up(game_id)
       assert new_game_id != game_id
 
-      {:ok, new_state} = Server.join_game(new_game_id)
+      {:ok, new_state} = Server.get_internal_state(new_game_id)
       assert new_state.difficulty == :normal
       assert MapSet.size(new_state.secret) == 4
     end
@@ -347,7 +363,7 @@ defmodule Cipher.Game.ServerTest do
       {:ok, new_game_id} = Server.level_up(game_id)
       assert new_game_id != game_id
 
-      {:ok, new_state} = Server.join_game(new_game_id)
+      {:ok, new_state} = Server.get_internal_state(new_game_id)
       assert new_state.difficulty == :hard
       assert MapSet.size(new_state.secret) == 5
     end
@@ -368,11 +384,11 @@ defmodule Cipher.Game.ServerTest do
       guess_data = %{shape: "circle", colour: "red", pattern: "dotted", direction: nil, size: nil}
       Server.guess(game_id, guess_data)
 
-      {:ok, state} = Server.join_game(game_id)
+      {:ok, state} = Server.get_internal_state(game_id)
       assert length(state.guesses) == 1
 
       {:ok, new_game_id} = Server.level_up(game_id)
-      {:ok, new_state} = Server.join_game(new_game_id)
+      {:ok, new_state} = Server.get_internal_state(new_game_id)
 
       assert new_state.guesses == []
       assert new_state.status == :active

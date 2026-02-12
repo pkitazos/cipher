@@ -16,7 +16,7 @@ defmodule CipherWeb.GameControllerTest do
       conn = post(conn, ~p"/api/games")
       %{"id" => game_id} = json_response(conn, 200)
 
-      {:ok, state} = Game.Server.join_game(game_id)
+      {:ok, state} = Game.Server.get_client_state(game_id)
       assert state.id == game_id
     end
 
@@ -77,7 +77,8 @@ defmodule CipherWeb.GameControllerTest do
       conn_create = post(conn, ~p"/api/games")
       %{"id" => game_id} = json_response(conn_create, 200)
 
-      {:ok, state} = Game.Server.join_game(game_id)
+      # Use test-only function to get the secret for constructing test guesses
+      {:ok, state} = Game.Server.get_internal_state(game_id)
 
       %{conn: conn, game_id: game_id, secret: state.secret}
     end
@@ -307,7 +308,8 @@ defmodule CipherWeb.GameControllerTest do
       conn_create = post(conn, ~p"/api/games")
       %{"id" => game_id} = json_response(conn_create, 200)
 
-      {:ok, state} = Game.Server.join_game(game_id)
+      # Use test-only function to get the secret for constructing test guesses
+      {:ok, state} = Game.Server.get_internal_state(game_id)
       secret_list = MapSet.to_list(state.secret)
 
       correct_guess = %{
@@ -359,7 +361,7 @@ defmodule CipherWeb.GameControllerTest do
       assert %{"id" => new_game_id, "history" => []} = response
       assert new_game_id != game_id
 
-      {:ok, new_state} = Game.Server.join_game(new_game_id)
+      {:ok, new_state} = Game.Server.get_client_state(new_game_id)
       assert new_state.difficulty == :normal
     end
 
@@ -370,7 +372,7 @@ defmodule CipherWeb.GameControllerTest do
       conn_level_up = post(conn, ~p"/api/games/#{game_id}/level_up")
       %{"id" => new_game_id} = json_response(conn_level_up, 200)
 
-      {:ok, new_state} = Game.Server.join_game(new_game_id)
+      {:ok, new_state} = Game.Server.get_client_state(new_game_id)
       assert new_state.difficulty == :hard
     end
 

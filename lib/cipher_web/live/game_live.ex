@@ -19,7 +19,7 @@ defmodule CipherWeb.GameLive do
   # Whatever we call our event, in this case `"start_game"` is what we match on
   def handle_event("start_game", _params, socket) do
     with {:ok, game_id} <- Game.Server.start_game(socket.assigns.difficulty),
-         {:ok, game_state} <- Game.Server.join_game(game_id) do
+         {:ok, game_state} <- Game.Server.get_client_state(game_id) do
       socket =
         socket
         |> assign(game: Map.drop(game_state, [:secret]))
@@ -49,40 +49,19 @@ defmodule CipherWeb.GameLive do
   end
 
   def handle_event("make_guess", _params, %{assigns: %{guess: guess, game: game}} = socket) do
-    # The guess is already in socket.assigns.guess as a map of Choice structs
-
     with {:ok, guess_mapset} <- Game.convert_guess_from_choices(guess, game.difficulty),
-         result <- Game.Server.guess(game.id, guess_mapset),
-         # Fetch the updated state from the Server (single source of truth)
-         {:ok, updated_game_state} <- Game.Server.join_game(game.id) do
-      # Filter secret from state
-      safe_game_state = Map.drop(updated_game_state, [:secret])
+         {:ok, updated_state} <- Game.Server.guess(game.id, guess_mapset) do
+      flash_message =
+        if updated_state.status == :won,
+          do: "Correct! You won!",
+          else: "You got #{updated_state.last_matches} matches."
 
-      case result do
-        {:correct, _matches} ->
-          socket =
-            socket
-            |> put_flash(:info, "Correct! You won!")
-            |> assign(game: safe_game_state)
-            |> assign(guess: %{})
+      socket =
+        socket
+        |> put_flash(:info, flash_message)
+        |> assign(game: updated_state, guess: %{})
 
-          {:noreply, socket}
-
-        {:incorrect, matches} ->
-          socket =
-            socket
-            |> put_flash(:info, "#{matches} matches. Try again!")
-            |> assign(game: safe_game_state)
-            |> assign(guess: %{})
-
-          {:noreply, socket}
-
-        {:error, reason} ->
-          {:noreply, put_flash(socket, :error, "Guess failed: #{inspect(reason)}")}
-      end
-    else
-      {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Invalid guess: #{inspect(reason)}")}
+      {:noreply, socket}
     end
   end
 
