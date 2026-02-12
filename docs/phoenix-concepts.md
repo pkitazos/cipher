@@ -1,5 +1,48 @@
 # Phoenix Concepts
 
+## LiveView Templates
+
+### Inline vs External Templates
+
+You can define templates in two ways:
+
+**Inline** - using `render/1` with the `~H` sigil:
+```elixir
+def render(assigns) do
+  ~H"""
+  <div>Hello {@name}</div>
+  """
+end
+```
+
+**External file** - create a `.html.heex` file next to your LiveView:
+```
+lib/cipher_web/live/game_live.ex
+lib/cipher_web/live/game_live.html.heex
+```
+
+When using an external file, remove the `render/1` function entirely. Phoenix finds it automatically by naming convention.
+
+### Accessing Helper Functions in Templates
+
+Any function defined in your LiveView module (public or private) is accessible in the template:
+
+```elixir
+# In game_live.ex
+defp difficulty_class(current, target) do
+  if current == target, do: "bg-green-700", else: "bg-zinc-700"
+end
+```
+
+```heex
+<%!-- In game_live.html.heex --%>
+<.button class={["w-24", difficulty_class(@difficulty, :easy)]}>
+  easy
+</.button>
+```
+
+---
+
 ## Flash Messages
 
 Flash messages are temporary notifications displayed to users after an action. They persist across a single redirect and then disappear automatically.

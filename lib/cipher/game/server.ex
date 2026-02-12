@@ -108,9 +108,30 @@ defmodule Cipher.Game.Server do
     {:reply, {:error, {:game_not_active, status}}, state, @idle_timeout}
   end
 
+  # Handle MapSet guess (from LiveView/TUI - already converted)
   @impl true
-  def handle_call({:guess, guess_data}, _from, state) do
-    with {:ok, guess} <- Game.convert_guess(guess_data, state.difficulty) do
+  def handle_call({:guess, %MapSet{} = guess}, _from, state) do
+    matches = Game.calculate_matches(guess, state.secret)
+    secret_size = MapSet.size(state.secret)
+
+    updated_state = %{state | guesses: [{guess, matches} | state.guesses]}
+
+    cond do
+      matches == secret_size ->
+        Logger.info("[#{state.id}] Guess correct!")
+        won_state = %{updated_state | status: :won}
+        {:reply, {:correct, secret_size}, won_state, @idle_timeout}
+
+      true ->
+        Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
+        {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
+    end
+  end
+
+  # Handle string map guess (from HTTP API - needs conversion)
+  @impl true
+  def handle_call({:guess, guess_data}, _from, state) when is_map(guess_data) do
+    with {:ok, guess} <- Game.convert_guess_from_strings(guess_data, state.difficulty) do
       matches = Game.calculate_matches(guess, state.secret)
       secret_size = MapSet.size(state.secret)
 

@@ -2,6 +2,15 @@ defmodule Cipher.Game do
   require Logger
   alias Cipher.Game.Choice
 
+  @type difficulty :: :easy | :normal | :hard
+  @type guess_map :: %{
+          optional(:shape) => String.t(),
+          optional(:colour) => String.t(),
+          optional(:pattern) => String.t(),
+          optional(:direction) => String.t(),
+          optional(:size) => String.t()
+        }
+
   @shapes [
     %Choice{kind: :shape, name: :circle},
     %Choice{kind: :shape, name: :square},
@@ -53,11 +62,14 @@ defmodule Cipher.Game do
 
   @valid_difficulties Map.keys(@difficulty_categories)
 
+  @spec next_difficulty(difficulty()) :: {:ok, difficulty()} | {:error, :max_difficulty}
+  @spec next_difficulty(any()) :: {:error, :invalid_difficulty}
   def next_difficulty(:easy), do: {:ok, :normal}
   def next_difficulty(:normal), do: {:ok, :hard}
   def next_difficulty(:hard), do: {:error, :max_difficulty}
   def next_difficulty(_), do: {:error, :invalid_difficulty}
 
+  @spec get_items_from_name() :: %{atom() => Choice.t()}
   defp get_items_from_name do
     @all_choices
     |> Enum.map(fn {_kind, options} ->
@@ -68,17 +80,28 @@ defmodule Cipher.Game do
     |> Enum.reduce(&Map.merge/2)
   end
 
-  defp get_choices_by_kind(kind) do
+  @spec get_choices_by_kind(atom()) :: %{atom() => Choice.t()}
+  def get_choices_by_kind(kind) do
     @all_choices
     |> Keyword.get(kind)
     |> Enum.map(&{&1.name, &1})
     |> Enum.into(%{})
   end
 
-  defp get_active_categories(difficulty) when difficulty in @valid_difficulties do
+  @spec get_active_categories(difficulty()) :: [atom()]
+  def get_active_categories(difficulty) when difficulty in @valid_difficulties do
     Map.fetch!(@difficulty_categories, difficulty)
   end
 
+  @spec get_choices_for_category(atom()) :: [Choice.t()] | nil
+  def get_choices_for_category(category) do
+    Keyword.get(@all_choices, category)
+  end
+
+  @spec validate_choice(atom(), String.t()) ::
+          {:ok, Choice.t()} | {:error, {:invalid_choice, atom(), String.t()}}
+  @spec validate_choice(atom(), nil) :: {:error, {:missing_field, atom()}}
+  @spec validate_choice(atom(), any()) :: {:error, {:invalid_format, atom()}}
   defp validate_choice(kind, value) when is_binary(value) do
     choices = get_choices_by_kind(kind)
     atom_value = String.to_atom(value)
@@ -92,6 +115,7 @@ defmodule Cipher.Game do
   defp validate_choice(kind, nil), do: {:error, {:missing_field, kind}}
   defp validate_choice(kind, _), do: {:error, {:invalid_format, kind}}
 
+  @spec initialise_secret(difficulty()) :: MapSet.t(Choice.t())
   def initialise_secret(difficulty \\ :normal)
 
   def initialise_secret(difficulty) when difficulty in @valid_difficulties do
@@ -105,6 +129,7 @@ defmodule Cipher.Game do
     |> MapSet.new()
   end
 
+  @spec convert_guess!(guess_map()) :: MapSet.t(Choice.t())
   def convert_guess!(guess) do
     items = get_items_from_name()
 
@@ -116,9 +141,30 @@ defmodule Cipher.Game do
     MapSet.new([shape, colour, pattern, direction])
   end
 
-  def convert_guess(guess, difficulty \\ :normal)
+  @spec convert_guess_from_choices(%{atom() => Choice.t()}, difficulty()) ::
+          {:ok, MapSet.t(Choice.t())} | {:error, {:missing_field, atom()}}
+  def convert_guess_from_choices(choice_map, difficulty)
+      when difficulty in @valid_difficulties do
+    active_categories = get_active_categories(difficulty)
 
-  def convert_guess(guess, difficulty) when difficulty in @valid_difficulties do
+    case Enum.find(active_categories, fn cat -> !Map.has_key?(choice_map, cat) end) do
+      nil ->
+        choices = Enum.map(active_categories, &Map.fetch!(choice_map, &1))
+        {:ok, MapSet.new(choices)}
+
+      missing_category ->
+        {:error, {:missing_field, missing_category}}
+    end
+  end
+
+  @spec convert_guess_from_strings(guess_map(), difficulty()) ::
+          {:ok, MapSet.t(Choice.t())}
+          | {:error, {:invalid_choice, atom(), String.t()}}
+          | {:error, {:missing_field, atom()}}
+          | {:error, {:invalid_format, atom()}}
+  def convert_guess_from_strings(guess, difficulty \\ :normal)
+
+  def convert_guess_from_strings(guess, difficulty) when difficulty in @valid_difficulties do
     active_categories = get_active_categories(difficulty)
 
     active_categories
@@ -139,6 +185,19 @@ defmodule Cipher.Game do
     end
   end
 
+  @doc """
+  Deprecated: Use convert_guess_from_strings/2 or convert_guess_from_choices/2 instead.
+  """
+  @spec convert_guess(guess_map(), difficulty()) ::
+          {:ok, MapSet.t(Choice.t())}
+          | {:error, {:invalid_choice, atom(), String.t()}}
+          | {:error, {:missing_field, atom()}}
+          | {:error, {:invalid_format, atom()}}
+  def convert_guess(guess, difficulty \\ :normal) do
+    convert_guess_from_strings(guess, difficulty)
+  end
+
+  @spec calculate_matches(MapSet.t(Choice.t()), MapSet.t(Choice.t())) :: non_neg_integer()
   def calculate_matches(guess, secret) do
     MapSet.size(secret) - (MapSet.difference(secret, guess) |> MapSet.size())
   end

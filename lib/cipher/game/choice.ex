@@ -1,15 +1,30 @@
 defmodule Cipher.Game.Choice do
   alias Cipher.Game.Choice
 
+  @type kind :: :shape | :colour | :pattern | :direction | :size
+  @type shape_name :: :circle | :square | :star | :triangle
+  @type colour_name :: :red | :green | :blue | :yellow
+  @type pattern_name :: :vertical_stripes | :horizontal_stripes | :checkered | :dotted
+  @type direction_name :: :top | :bottom | :left | :right
+  @type size_name :: :tiny | :small | :medium | :large
+  @type name :: shape_name() | colour_name() | pattern_name() | direction_name() | size_name()
+
+  @type t :: %__MODULE__{
+          kind: kind(),
+          name: name()
+        }
+
   defstruct [:kind, :name]
 
   # Canonical ordering for choices
-  @kind_order [:shape, :colour, :pattern, :direction]
+  @kind_order [:shape, :colour, :pattern, :direction, :size]
   @shape_order [:circle, :square, :star, :triangle]
   @colour_order [:red, :green, :blue, :yellow]
   @pattern_order [:vertical_stripes, :horizontal_stripes, :checkered, :dotted]
   @direction_order [:top, :bottom, :left, :right]
+  @size_order [:tiny, :small, :medium, :large]
 
+  @spec show(t()) :: String.t()
   def show(%Choice{name: :circle}), do: "O"
   def show(%Choice{name: :square}), do: "[]"
   def show(%Choice{name: :star}), do: "*"
@@ -26,18 +41,20 @@ defmodule Cipher.Game.Choice do
   def show(%Choice{name: :bottom}), do: "v"
   def show(%Choice{name: :left}), do: "<"
   def show(%Choice{name: :right}), do: ">"
+  def show(%Choice{name: :tiny}), do: "·"
+  def show(%Choice{name: :small}), do: "•"
+  def show(%Choice{name: :medium}), do: "●"
+  def show(%Choice{name: :large}), do: "◉"
 
+  @spec guess_to_map(MapSet.t(t())) :: %{kind() => name()}
   def guess_to_map(guess_mapset) do
-    guess_list = MapSet.to_list(guess_mapset)
-
-    %{
-      shape: Enum.find(guess_list, &(&1.kind == :shape)).name,
-      colour: Enum.find(guess_list, &(&1.kind == :colour)).name,
-      pattern: Enum.find(guess_list, &(&1.kind == :pattern)).name,
-      direction: Enum.find(guess_list, &(&1.kind == :direction)).name
-    }
+    guess_mapset
+    |> MapSet.to_list()
+    |> Enum.map(fn choice -> {choice.kind, choice.name} end)
+    |> Enum.into(%{})
   end
 
+  @spec compare(t(), t()) :: boolean()
   def compare(%Choice{kind: kind1} = c1, %Choice{kind: kind2} = c2) do
     cond do
       kind1 != kind2 -> compare_kinds(kind1, kind2)
@@ -45,17 +62,21 @@ defmodule Cipher.Game.Choice do
     end
   end
 
+  @spec compare_kinds(kind(), kind()) :: boolean()
   defp compare_kinds(k1, k2) do
     pos1 = Enum.find_index(@kind_order, &(&1 == k1))
     pos2 = Enum.find_index(@kind_order, &(&1 == k2))
     pos1 <= pos2
   end
 
+  @spec compare_names(kind(), name(), name()) :: boolean()
   defp compare_names(:shape, n1, n2), do: compare_in_list(@shape_order, n1, n2)
   defp compare_names(:colour, n1, n2), do: compare_in_list(@colour_order, n1, n2)
   defp compare_names(:pattern, n1, n2), do: compare_in_list(@pattern_order, n1, n2)
   defp compare_names(:direction, n1, n2), do: compare_in_list(@direction_order, n1, n2)
+  defp compare_names(:size, n1, n2), do: compare_in_list(@size_order, n1, n2)
 
+  @spec compare_in_list([atom()], atom(), atom()) :: boolean()
   defp compare_in_list(list, n1, n2) do
     pos1 = Enum.find_index(list, &(&1 == n1))
     pos2 = Enum.find_index(list, &(&1 == n2))

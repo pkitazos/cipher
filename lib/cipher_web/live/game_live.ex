@@ -8,54 +8,26 @@ defmodule CipherWeb.GameLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(game_id: nil)
+      |> assign(game: nil)
       |> assign(difficulty: nil)
+      |> assign(guess: nil)
 
     {:ok, socket}
-  end
-
-  # The `render/1` function returns the HTML.
-  # It uses `@game_id` from socket assigns
-  def render(assigns) do
-    ~H"""
-    <div class="max-w-md mx-auto text-center flex flex-col gap-8 justify-center items-center">
-      <h1 class="text-3xl font-bold mb-8">Cipher</h1>
-
-      <div class="flex flex-row gap-2">
-        <.button phx-click="set_difficulty" phx-value-difficulty="easy" class="bg-red-700 w-24">
-            easy
-        </.button>
-        <.button phx-click="set_difficulty" phx-value-difficulty="normal" class="bg-red-700 w-24">
-            normal
-        </.button>
-        <.button phx-click="set_difficulty" phx-value-difficulty="hard" class="bg-red-700 w-24">
-        hard
-        </.button>
-      </div>
-
-      <.button disabled={@difficulty == nil} phx-click="start_game" class="w-76">
-        Start Game
-      </.button>
-
-      <div :if={@game_id} class="mt-8 p-4 bg-zinc-100 rounded">
-        <p class="text-sm text-zinc-600">Game ID</p>
-        <p class="font-mono text-lg">{@game_id}</p>
-        <p class="mt-4 text-sm text-zinc-600">Difficulty</p>
-        <p class={["font-mono text-lg", difficulty_class(@difficulty)]}>{@difficulty}</p>
-      </div>
-    </div>
-    """
   end
 
   # In LiveView events are handled using the `handle_event/3` function
   # Whatever we call our event, in this case `"start_game"` is what we match on
   def handle_event("start_game", _params, socket) do
-    case Game.Server.start_game(socket.assigns.difficulty) do
-      {:ok, game_id} ->
-        {:noreply, assign(socket, game_id: game_id)}
+    with {:ok, game_id} <- Game.Server.start_game(socket.assigns.difficulty),
+         {:ok, game_state} <- Game.Server.join_game(game_id) do
+      socket =
+        socket
+        |> assign(game: Map.drop(game_state, [:secret]))
+        |> assign(guess: %{})
 
-      {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to start game: #{reason}")}
+      {:noreply, socket}
+    else
+      {:error, reason} -> {:noreply, put_flash(socket, :error, "Failed to start game: #{reason}")}
     end
   end
 
@@ -63,7 +35,68 @@ defmodule CipherWeb.GameLive do
     {:noreply, assign(socket, difficulty: String.to_existing_atom(difficulty))}
   end
 
+  def handle_event("select_choice", %{"kind" => kind, "choice" => choice_name}, socket) do
+    kind = String.to_existing_atom(kind)
+    choice_name = String.to_existing_atom(choice_name)
+
+    choice_map = Game.get_choices_by_kind(kind)
+    choice = choice_map[choice_name]
+
+    updated_guess = Map.update(socket.assigns.guess, kind, choice, fn _ -> choice end)
+    IO.inspect(updated_guess, label: "current guess")
+
+    {:noreply, assign(socket, guess: updated_guess)}
+  end
+
+  def handle_event("make_guess", _params, %{assigns: %{guess: guess, game: game}} = socket) do
+    # The guess is already in socket.assigns.guess as a map of Choice structs
+
+    with {:ok, guess_mapset} <- Game.convert_guess_from_choices(guess, game.difficulty),
+         result <- Game.Server.guess(game.id, guess_mapset),
+         # Fetch the updated state from the Server (single source of truth)
+         {:ok, updated_game_state} <- Game.Server.join_game(game.id) do
+      # Filter secret from state
+      safe_game_state = Map.drop(updated_game_state, [:secret])
+
+      case result do
+        {:correct, _matches} ->
+          socket =
+            socket
+            |> put_flash(:info, "Correct! You won!")
+            |> assign(game: safe_game_state)
+            |> assign(guess: %{})
+
+          {:noreply, socket}
+
+        {:incorrect, matches} ->
+          socket =
+            socket
+            |> put_flash(:info, "#{matches} matches. Try again!")
+            |> assign(game: safe_game_state)
+            |> assign(guess: %{})
+
+          {:noreply, socket}
+
+        {:error, reason} ->
+          {:noreply, put_flash(socket, :error, "Guess failed: #{inspect(reason)}")}
+      end
+    else
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Invalid guess: #{inspect(reason)}")}
+    end
+  end
+
   defp difficulty_class(:easy), do: "text-green-500"
   defp difficulty_class(:normal), do: "text-blue-500"
   defp difficulty_class(:hard), do: "text-red-500"
+
+  defp status_class(:active), do: "text-lime-500"
+  defp status_class(:won), do: "text-indigo-400"
+  defp status_class(:expired), do: "text-red-500"
+
+  defp sort_guess(guess) do
+    guess
+    |> MapSet.to_list()
+    |> Enum.sort(&Game.Choice.compare/2)
+  end
 end

@@ -17,8 +17,8 @@ defmodule CipherWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-700 active:bg-zinc-800",
-        @class
+        "rounded-lg px-4 py-2 text-sm font-semibold",
+        @class || "bg-zinc-900 text-white hover:bg-zinc-700 active:bg-zinc-800"
       ]}
       {@rest}
     >

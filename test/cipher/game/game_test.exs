@@ -145,6 +145,77 @@ defmodule Cipher.GameTest do
     end
   end
 
+  describe "convert_guess_from_choices/2" do
+    test "returns {:ok, mapset} for valid choice map" do
+      circle = %Choice{kind: :shape, name: :circle}
+      red = %Choice{kind: :colour, name: :red}
+      vertical = %Choice{kind: :pattern, name: :vertical_stripes}
+      top = %Choice{kind: :direction, name: :top}
+
+      guess_map = %{
+        shape: circle,
+        colour: red,
+        pattern: vertical,
+        direction: top
+      }
+
+      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :normal)
+      assert MapSet.size(result) == 4
+      assert MapSet.member?(result, circle)
+      assert MapSet.member?(result, red)
+      assert MapSet.member?(result, vertical)
+      assert MapSet.member?(result, top)
+    end
+
+    test "returns error for missing field" do
+      circle = %Choice{kind: :shape, name: :circle}
+      red = %Choice{kind: :colour, name: :red}
+
+      incomplete_guess = %{
+        shape: circle,
+        colour: red
+        # missing pattern and direction
+      }
+
+      assert {:error, {:missing_field, :pattern}} =
+               Game.convert_guess_from_choices(incomplete_guess, :normal)
+    end
+
+    test "works with easy difficulty (3 fields)" do
+      circle = %Choice{kind: :shape, name: :circle}
+      red = %Choice{kind: :colour, name: :red}
+      vertical = %Choice{kind: :pattern, name: :vertical_stripes}
+
+      guess_map = %{
+        shape: circle,
+        colour: red,
+        pattern: vertical
+      }
+
+      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :easy)
+      assert MapSet.size(result) == 3
+    end
+
+    test "works with hard difficulty (5 fields)" do
+      circle = %Choice{kind: :shape, name: :circle}
+      red = %Choice{kind: :colour, name: :red}
+      vertical = %Choice{kind: :pattern, name: :vertical_stripes}
+      top = %Choice{kind: :direction, name: :top}
+      small = %Choice{kind: :size, name: :small}
+
+      guess_map = %{
+        shape: circle,
+        colour: red,
+        pattern: vertical,
+        direction: top,
+        size: small
+      }
+
+      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :hard)
+      assert MapSet.size(result) == 5
+    end
+  end
+
   describe "calculate_matches/2" do
     test "returns 4 when all choices match" do
       secret =
