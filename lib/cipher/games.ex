@@ -100,13 +100,21 @@ defmodule Cipher.Games do
   end
 
   @doc """
-  Progresses the game to the next difficulty level.
-  Returns the NEW game state (for the new game ID).
+  Progresses the user to the next difficulty level.
+  1. Checks the current game's settings.
+  2. Calculates the next difficulty.
+  3. Starts a completely new game instance.
   """
   def level_up(current_game_id) do
-    with {:ok, new_game_id} <- Server.level_up(current_game_id),
-         {:ok, new_game_state} <- get_running_game(new_game_id) do
-      {:ok, new_game_state}
+    current_game = Repo.get!(Cipher.Games.Game, current_game_id)
+
+    case Cipher.Games.Logic.next_difficulty(current_game.difficulty) do
+      {:ok, next_difficulty} ->
+        user_stub = %{id: current_game.user_id}
+        start_new_game(user_stub, next_difficulty)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

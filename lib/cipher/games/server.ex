@@ -52,17 +52,6 @@ defmodule Cipher.Games.Server do
     end
   end
 
-  def level_up(game_id) do
-    with [{pid, _value}] <- Registry.lookup(Cipher.GameRegistry, game_id),
-         {:ok, game_state} <- GenServer.call(pid, :internal_state),
-         {:ok, _next_difficulty} <- Logic.next_difficulty(game_state.difficulty) do
-      {:ok, %{}}
-    else
-      [] -> {:error, :game_not_found}
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
   @impl true
   def init(game) do
     # The Server calls the Context, and the Context calls the Repo.
