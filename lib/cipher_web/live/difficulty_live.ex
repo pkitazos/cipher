@@ -1,7 +1,7 @@
 defmodule CipherWeb.DifficultyLive do
   use CipherWeb, :live_view
 
-  alias Cipher.Game
+  alias Cipher.Games.Server, as: GameServer
 
   # This is called when the LiveView loads.
   # We initialize with `game_id: nil`
@@ -18,7 +18,7 @@ defmodule CipherWeb.DifficultyLive do
   # In LiveView events are handled using the `handle_event/3` function
   # Whatever we call our event, in this case `"start_game"` is what we match on
   def handle_event("start_game", _params, socket) do
-    case Game.Server.start_game(socket.assigns.difficulty) do
+    case GameServer.start_game(socket.assigns.difficulty) do
       {:ok, game_id} ->
         {:noreply, push_navigate(socket, to: ~p"/game/#{game_id}")}
 

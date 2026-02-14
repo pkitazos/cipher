@@ -1,10 +1,12 @@
 defmodule CipherWeb.GameLive do
   use CipherWeb, :live_view
 
-  alias Cipher.Game
+  alias Cipher.Games.Server, as: GameServer
+  alias Cipher.Games.Logic, as: GameLogic
+  alias Cipher.Games.Choice
 
   def mount(%{"game_id" => game_id}, _session, socket) do
-    case Game.Server.get_client_state(game_id) do
+    case GameServer.get_client_state(game_id) do
       {:ok, game_state} ->
         socket =
           socket
@@ -27,7 +29,7 @@ defmodule CipherWeb.GameLive do
     kind = String.to_existing_atom(kind)
     choice_name = String.to_existing_atom(choice_name)
 
-    choice_map = Game.get_choices_by_kind(kind)
+    choice_map = GameLogic.get_choices_by_kind(kind)
     choice = choice_map[choice_name]
 
     updated_guess = Map.update(socket.assigns.guess, kind, choice, fn _ -> choice end)
@@ -37,8 +39,8 @@ defmodule CipherWeb.GameLive do
   end
 
   def handle_event("make_guess", _params, %{assigns: %{guess: guess, game: game}} = socket) do
-    with {:ok, guess_mapset} <- Game.convert_guess_from_choices(guess, game.difficulty),
-         {:ok, updated_state} <- Game.Server.guess(game.id, guess_mapset) do
+    with {:ok, guess_mapset} <- GameLogic.convert_guess_from_choices(guess, game.difficulty),
+         {:ok, updated_state} <- GameServer.guess(game.id, guess_mapset) do
       flash_message =
         if updated_state.status == :won,
           do: "Correct! You won!",
@@ -55,8 +57,8 @@ defmodule CipherWeb.GameLive do
 
   # this also feels a little weird it's so similar to the start and restart functions
   def handle_event("level_up", _params, socket) do
-    with {:ok, game_id} <- Game.Server.level_up(socket.assigns.game.id),
-         {:ok, game_state} <- Game.Server.get_client_state(game_id) do
+    with {:ok, game_id} <- GameServer.level_up(socket.assigns.game.id),
+         {:ok, game_state} <- GameServer.get_client_state(game_id) do
       socket =
         socket
         |> assign(game: game_state)
@@ -81,6 +83,6 @@ defmodule CipherWeb.GameLive do
   defp sort_guess(guess) do
     guess
     |> MapSet.to_list()
-    |> Enum.sort(&Game.Choice.compare/2)
+    |> Enum.sort(&Choice.compare/2)
   end
 end

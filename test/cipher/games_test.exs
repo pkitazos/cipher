@@ -21,12 +21,16 @@ defmodule Cipher.GamesTest do
     end
 
     test "create_game/1 with valid data creates a game" do
-      valid_attrs = %{status: "some status", difficulty: "some difficulty", secret: ["option1", "option2"]}
+      valid_attrs = %{
+        status: :active,
+        difficulty: :normal,
+        secret: [:circle, :red, :vertical_stripes, :top]
+      }
 
       assert {:ok, %Game{} = game} = Games.create_game(valid_attrs)
-      assert game.status == "some status"
-      assert game.difficulty == "some difficulty"
-      assert game.secret == ["option1", "option2"]
+      assert game.status == :active
+      assert game.difficulty == :normal
+      assert game.secret == [:circle, :red, :vertical_stripes, :top]
     end
 
     test "create_game/1 with invalid data returns error changeset" do
@@ -35,12 +39,17 @@ defmodule Cipher.GamesTest do
 
     test "update_game/2 with valid data updates the game" do
       game = game_fixture()
-      update_attrs = %{status: "some updated status", difficulty: "some updated difficulty", secret: ["option1"]}
+
+      update_attrs = %{
+        status: :won,
+        difficulty: :hard,
+        secret: [:circle, :red, :vertical_stripes, :top, :tiny]
+      }
 
       assert {:ok, %Game{} = game} = Games.update_game(game, update_attrs)
-      assert game.status == "some updated status"
-      assert game.difficulty == "some updated difficulty"
-      assert game.secret == ["option1"]
+      assert game.status == :won
+      assert game.difficulty == :hard
+      assert game.secret == [:circle, :red, :vertical_stripes, :top, :tiny]
     end
 
     test "update_game/2 with invalid data returns error changeset" do
@@ -79,11 +88,17 @@ defmodule Cipher.GamesTest do
     end
 
     test "create_guess/1 with valid data creates a guess" do
-      valid_attrs = %{matches: 42, choices: ["option1", "option2"]}
+      game = game_fixture()
+
+      valid_attrs = %{
+        game_id: game.id,
+        matches: 3,
+        choices: [:circle, :red, :vertical_stripes, :top]
+      }
 
       assert {:ok, %Guess{} = guess} = Games.create_guess(valid_attrs)
-      assert guess.matches == 42
-      assert guess.choices == ["option1", "option2"]
+      assert guess.matches == 3
+      assert guess.choices == [:circle, :red, :vertical_stripes, :top]
     end
 
     test "create_guess/1 with invalid data returns error changeset" do
@@ -92,11 +107,11 @@ defmodule Cipher.GamesTest do
 
     test "update_guess/2 with valid data updates the guess" do
       guess = guess_fixture()
-      update_attrs = %{matches: 43, choices: ["option1"]}
+      update_attrs = %{matches: 2, choices: [:circle, :red, :vertical_stripes, :top]}
 
       assert {:ok, %Guess{} = guess} = Games.update_guess(guess, update_attrs)
-      assert guess.matches == 43
-      assert guess.choices == ["option1"]
+      assert guess.matches == 2
+      assert guess.choices == [:circle, :red, :vertical_stripes, :top]
     end
 
     test "update_guess/2 with invalid data returns error changeset" do

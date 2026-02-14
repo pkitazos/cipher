@@ -8,12 +8,15 @@ defmodule Cipher.GamesFixtures do
   Generate a game.
   """
   def game_fixture(attrs \\ %{}) do
+    user = Cipher.AccountsFixtures.user_fixture()
+
     {:ok, game} =
       attrs
       |> Enum.into(%{
-        difficulty: "some difficulty",
-        secret: ["option1", "option2"],
-        status: "some status"
+        difficulty: :normal,
+        secret: [:circle, :red, :vertical_stripes, :top],
+        status: :active,
+        user_id: user.id
       })
       |> Cipher.Games.create_game()
 
@@ -24,11 +27,14 @@ defmodule Cipher.GamesFixtures do
   Generate a guess.
   """
   def guess_fixture(attrs \\ %{}) do
+    game = game_fixture()
+
     {:ok, guess} =
       attrs
       |> Enum.into(%{
-        choices: ["option1", "option2"],
-        matches: 42
+        choices: [:circle, :red, :vertical_stripes, :top],
+        matches: 4,
+        game_id: game.id
       })
       |> Cipher.Games.create_guess()
 

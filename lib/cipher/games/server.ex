@@ -1,7 +1,7 @@
-defmodule Cipher.Game.Server do
+defmodule Cipher.Games.Server do
   use GenServer
   require Logger
-  alias Cipher.Game
+  alias Cipher.Games.Logic, as: GameLogic
 
   @idle_timeout :timer.hours(1)
 
@@ -58,7 +58,7 @@ defmodule Cipher.Game.Server do
   def level_up(game_id) do
     with [{pid, _value}] <- Registry.lookup(Cipher.GameRegistry, game_id),
          {:ok, game_state} <- GenServer.call(pid, :internal_state),
-         {:ok, next_difficulty} <- Game.next_difficulty(game_state.difficulty) do
+         {:ok, next_difficulty} <- GameLogic.next_difficulty(game_state.difficulty) do
       start_game(next_difficulty)
     else
       [] -> {:error, :game_not_found}
@@ -71,7 +71,7 @@ defmodule Cipher.Game.Server do
     state = %{
       id: game_id,
       difficulty: difficulty,
-      secret: Game.initialise_secret(difficulty),
+      secret: GameLogic.initialise_secret(difficulty),
       guesses: [],
       last_matches: nil,
       status: :active
@@ -109,7 +109,7 @@ defmodule Cipher.Game.Server do
   # Handle MapSet guess (from LiveView/TUI - already converted)
   @impl true
   def handle_call({:guess, %MapSet{} = guess}, _from, state) do
-    matches = Game.calculate_matches(guess, state.secret)
+    matches = GameLogic.calculate_matches(guess, state.secret)
     secret_size = MapSet.size(state.secret)
 
     updated_state = %{state | guesses: [{guess, matches} | state.guesses], last_matches: matches}
@@ -129,8 +129,8 @@ defmodule Cipher.Game.Server do
   # Handle string map guess (from HTTP API - needs conversion)
   @impl true
   def handle_call({:guess, guess_data}, _from, state) when is_map(guess_data) do
-    with {:ok, guess} <- Game.convert_guess_from_strings(guess_data, state.difficulty) do
-      matches = Game.calculate_matches(guess, state.secret)
+    with {:ok, guess} <- GameLogic.convert_guess_from_strings(guess_data, state.difficulty) do
+      matches = GameLogic.calculate_matches(guess, state.secret)
       secret_size = MapSet.size(state.secret)
 
       updated_state = %{

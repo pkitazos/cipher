@@ -1,16 +1,17 @@
 defmodule Cipher.GameTest do
   use ExUnit.Case, async: true
-  alias Cipher.Game
+
+  alias Cipher.Games.Logic, as: GameLogic
   alias Cipher.Games.Choice
 
   describe "initialise_secret/0" do
     test "returns a MapSet with 4 choices" do
-      secret = Game.initialise_secret()
+      secret = GameLogic.initialise_secret()
       assert MapSet.size(secret) == 4
     end
 
     test "contains one choice of each kind" do
-      secret = Game.initialise_secret()
+      secret = GameLogic.initialise_secret()
       choices_list = MapSet.to_list(secret)
 
       kinds = Enum.map(choices_list, & &1.kind)
@@ -21,7 +22,7 @@ defmodule Cipher.GameTest do
     end
 
     test "generates different secrets on multiple calls" do
-      secrets = Enum.map(1..10, fn _ -> Game.initialise_secret() end)
+      secrets = Enum.map(1..10, fn _ -> GameLogic.initialise_secret() end)
       unique_secrets = Enum.uniq(secrets)
 
       # we should get at least 2 different secrets in 10 tries
@@ -39,7 +40,7 @@ defmodule Cipher.GameTest do
         direction: "top"
       }
 
-      result = Game.convert_guess!(guess)
+      result = GameLogic.convert_guess!(guess)
 
       assert MapSet.size(result) == 4
 
@@ -52,22 +53,22 @@ defmodule Cipher.GameTest do
 
     test "raises error for invalid shape" do
       guess = %{shape: "invalid", colour: "red", pattern: "dotted", direction: "top"}
-      assert_raise KeyError, fn -> Game.convert_guess!(guess) end
+      assert_raise KeyError, fn -> GameLogic.convert_guess!(guess) end
     end
 
     test "raises error for invalid colour" do
       guess = %{shape: "circle", colour: "invalid", pattern: "dotted", direction: "top"}
-      assert_raise KeyError, fn -> Game.convert_guess!(guess) end
+      assert_raise KeyError, fn -> GameLogic.convert_guess!(guess) end
     end
 
     test "raises error for invalid pattern" do
       guess = %{shape: "circle", colour: "red", pattern: "invalid", direction: "top"}
-      assert_raise KeyError, fn -> Game.convert_guess!(guess) end
+      assert_raise KeyError, fn -> GameLogic.convert_guess!(guess) end
     end
 
     test "raises error for invalid direction" do
       guess = %{shape: "circle", colour: "red", pattern: "dotted", direction: "invalid"}
-      assert_raise KeyError, fn -> Game.convert_guess!(guess) end
+      assert_raise KeyError, fn -> GameLogic.convert_guess!(guess) end
     end
   end
 
@@ -80,68 +81,68 @@ defmodule Cipher.GameTest do
         direction: "top"
       }
 
-      assert {:ok, result} = Game.convert_guess(guess)
+      assert {:ok, result} = GameLogic.convert_guess(guess)
       assert MapSet.size(result) == 4
     end
 
     test "returns error tuple with invalid_choice for invalid shape" do
       guess = %{shape: "invalid", colour: "red", pattern: "dotted", direction: "top"}
-      assert {:error, {:invalid_choice, :shape, "invalid"}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_choice, :shape, "invalid"}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_choice for invalid colour" do
       guess = %{shape: "circle", colour: "invalid", pattern: "dotted", direction: "top"}
-      assert {:error, {:invalid_choice, :colour, "invalid"}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_choice, :colour, "invalid"}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_choice for invalid pattern" do
       guess = %{shape: "circle", colour: "red", pattern: "invalid", direction: "top"}
-      assert {:error, {:invalid_choice, :pattern, "invalid"}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_choice, :pattern, "invalid"}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_choice for invalid direction" do
       guess = %{shape: "circle", colour: "red", pattern: "dotted", direction: "invalid"}
-      assert {:error, {:invalid_choice, :direction, "invalid"}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_choice, :direction, "invalid"}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with missing_field for nil shape" do
       guess = %{shape: nil, colour: "red", pattern: "dotted", direction: "top"}
-      assert {:error, {:missing_field, :shape}} = Game.convert_guess(guess)
+      assert {:error, {:missing_field, :shape}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with missing_field for nil colour" do
       guess = %{shape: "circle", colour: nil, pattern: "dotted", direction: "top"}
-      assert {:error, {:missing_field, :colour}} = Game.convert_guess(guess)
+      assert {:error, {:missing_field, :colour}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with missing_field for nil pattern" do
       guess = %{shape: "circle", colour: "red", pattern: nil, direction: "top"}
-      assert {:error, {:missing_field, :pattern}} = Game.convert_guess(guess)
+      assert {:error, {:missing_field, :pattern}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with missing_field for nil direction" do
       guess = %{shape: "circle", colour: "red", pattern: "dotted", direction: nil}
-      assert {:error, {:missing_field, :direction}} = Game.convert_guess(guess)
+      assert {:error, {:missing_field, :direction}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_format for non-string shape" do
       guess = %{shape: 123, colour: "red", pattern: "dotted", direction: "top"}
-      assert {:error, {:invalid_format, :shape}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_format, :shape}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_format for non-string colour" do
       guess = %{shape: "circle", colour: :red, pattern: "dotted", direction: "top"}
-      assert {:error, {:invalid_format, :colour}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_format, :colour}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_format for non-string pattern" do
       guess = %{shape: "circle", colour: "red", pattern: :dotted, direction: "top"}
-      assert {:error, {:invalid_format, :pattern}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_format, :pattern}} = GameLogic.convert_guess(guess)
     end
 
     test "returns error tuple with invalid_format for non-string direction" do
       guess = %{shape: "circle", colour: "red", pattern: "dotted", direction: 123}
-      assert {:error, {:invalid_format, :direction}} = Game.convert_guess(guess)
+      assert {:error, {:invalid_format, :direction}} = GameLogic.convert_guess(guess)
     end
   end
 
@@ -159,7 +160,7 @@ defmodule Cipher.GameTest do
         direction: top
       }
 
-      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :normal)
+      assert {:ok, result} = GameLogic.convert_guess_from_choices(guess_map, :normal)
       assert MapSet.size(result) == 4
       assert MapSet.member?(result, circle)
       assert MapSet.member?(result, red)
@@ -178,7 +179,7 @@ defmodule Cipher.GameTest do
       }
 
       assert {:error, {:missing_field, :pattern}} =
-               Game.convert_guess_from_choices(incomplete_guess, :normal)
+               GameLogic.convert_guess_from_choices(incomplete_guess, :normal)
     end
 
     test "works with easy difficulty (3 fields)" do
@@ -192,7 +193,7 @@ defmodule Cipher.GameTest do
         pattern: vertical
       }
 
-      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :easy)
+      assert {:ok, result} = GameLogic.convert_guess_from_choices(guess_map, :easy)
       assert MapSet.size(result) == 3
     end
 
@@ -211,7 +212,7 @@ defmodule Cipher.GameTest do
         size: small
       }
 
-      assert {:ok, result} = Game.convert_guess_from_choices(guess_map, :hard)
+      assert {:ok, result} = GameLogic.convert_guess_from_choices(guess_map, :hard)
       assert MapSet.size(result) == 5
     end
   end
@@ -234,7 +235,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :direction, name: :top}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 4
+      assert GameLogic.calculate_matches(guess, secret) == 4
     end
 
     test "returns 0 when no choices match" do
@@ -254,7 +255,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :direction, name: :bottom}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 0
+      assert GameLogic.calculate_matches(guess, secret) == 0
     end
 
     test "returns 1 when only one choice matches" do
@@ -274,7 +275,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :direction, name: :bottom}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 1
+      assert GameLogic.calculate_matches(guess, secret) == 1
     end
 
     test "returns 2 when two choices match" do
@@ -294,7 +295,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :direction, name: :bottom}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 2
+      assert GameLogic.calculate_matches(guess, secret) == 2
     end
 
     test "returns 3 when three choices match" do
@@ -314,7 +315,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :direction, name: :bottom}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 3
+      assert GameLogic.calculate_matches(guess, secret) == 3
     end
 
     test "works end-to-end" do
@@ -333,14 +334,14 @@ defmodule Cipher.GameTest do
         direction: "top"
       }
 
-      {:ok, guess} = Game.convert_guess(guess_data)
-      assert Game.calculate_matches(guess, secret) == 4
+      {:ok, guess} = GameLogic.convert_guess(guess_data)
+      assert GameLogic.calculate_matches(guess, secret) == 4
     end
   end
 
   describe "difficulty levels" do
     test "easy difficulty generates secret with 3 choices (no direction)" do
-      secret = Game.initialise_secret(:easy)
+      secret = GameLogic.initialise_secret(:easy)
       assert MapSet.size(secret) == 3
 
       choices_list = MapSet.to_list(secret)
@@ -354,7 +355,7 @@ defmodule Cipher.GameTest do
     end
 
     test "normal difficulty generates secret with 4 choices (default)" do
-      secret = Game.initialise_secret(:normal)
+      secret = GameLogic.initialise_secret(:normal)
       assert MapSet.size(secret) == 4
 
       choices_list = MapSet.to_list(secret)
@@ -368,7 +369,7 @@ defmodule Cipher.GameTest do
     end
 
     test "hard difficulty generates secret with 5 choices (adds size)" do
-      secret = Game.initialise_secret(:hard)
+      secret = GameLogic.initialise_secret(:hard)
       assert MapSet.size(secret) == 5
 
       choices_list = MapSet.to_list(secret)
@@ -390,7 +391,7 @@ defmodule Cipher.GameTest do
         size: nil
       }
 
-      assert {:ok, guess} = Game.convert_guess(guess_data, :easy)
+      assert {:ok, guess} = GameLogic.convert_guess(guess_data, :easy)
       assert MapSet.size(guess) == 3
 
       choices_list = MapSet.to_list(guess)
@@ -411,7 +412,7 @@ defmodule Cipher.GameTest do
         size: "medium"
       }
 
-      assert {:ok, guess} = Game.convert_guess(guess_data, :hard)
+      assert {:ok, guess} = GameLogic.convert_guess(guess_data, :hard)
       assert MapSet.size(guess) == 5
 
       choices_list = MapSet.to_list(guess)
@@ -433,7 +434,7 @@ defmodule Cipher.GameTest do
         size: "tiny"
       }
 
-      assert {:ok, _} = Game.convert_guess(valid_guess, :hard)
+      assert {:ok, _} = GameLogic.convert_guess(valid_guess, :hard)
 
       invalid_guess = %{
         shape: "circle",
@@ -444,7 +445,7 @@ defmodule Cipher.GameTest do
       }
 
       assert {:error, {:invalid_choice, :size, "invalid"}} =
-               Game.convert_guess(invalid_guess, :hard)
+               GameLogic.convert_guess(invalid_guess, :hard)
     end
 
     test "calculate_matches works for easy difficulty" do
@@ -462,7 +463,7 @@ defmodule Cipher.GameTest do
           %Choice{kind: :pattern, name: :vertical_stripes}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 3
+      assert GameLogic.calculate_matches(guess, secret) == 3
     end
 
     test "calculate_matches works for hard difficulty" do
@@ -484,23 +485,23 @@ defmodule Cipher.GameTest do
           %Choice{kind: :size, name: :medium}
         ])
 
-      assert Game.calculate_matches(guess, secret) == 5
+      assert GameLogic.calculate_matches(guess, secret) == 5
     end
 
     test "next_difficulty returns normal for easy" do
-      assert {:ok, :normal} = Game.next_difficulty(:easy)
+      assert {:ok, :normal} = GameLogic.next_difficulty(:easy)
     end
 
     test "next_difficulty returns hard for normal" do
-      assert {:ok, :hard} = Game.next_difficulty(:normal)
+      assert {:ok, :hard} = GameLogic.next_difficulty(:normal)
     end
 
     test "next_difficulty returns error for hard" do
-      assert {:error, :max_difficulty} = Game.next_difficulty(:hard)
+      assert {:error, :max_difficulty} = GameLogic.next_difficulty(:hard)
     end
 
     test "next_difficulty returns error for invalid difficulty" do
-      assert {:error, :invalid_difficulty} = Game.next_difficulty(:invalid)
+      assert {:error, :invalid_difficulty} = GameLogic.next_difficulty(:invalid)
     end
   end
 end

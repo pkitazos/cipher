@@ -6,6 +6,7 @@ defmodule Cipher.Repo.Migrations.CreateUsers do
       add(:email, :string)
       add(:username, :string)
       add(:provider, :string)
+      add(:uid, :string)
 
       timestamps(type: :utc_datetime)
     end

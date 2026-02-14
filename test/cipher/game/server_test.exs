@@ -1,6 +1,6 @@
-defmodule Cipher.Game.ServerTest do
+defmodule Cipher.Games.ServerTest do
   use ExUnit.Case, async: true
-  alias Cipher.Game.Server
+  alias Cipher.Games.Server
 
   describe "start_game/0" do
     test "returns {:ok, game_id} with a valid UUID" do
@@ -61,8 +61,7 @@ defmodule Cipher.Game.ServerTest do
       %{game_id: game_id, secret: state.secret}
     end
 
-    test "returns :correct when all 4 choices match", %{game_id: game_id, secret: secret} do
-      # Convert the secret to a guess format
+    test "returns :won status when all 4 choices match", %{game_id: game_id, secret: secret} do
       secret_list = MapSet.to_list(secret)
 
       guess_data = %{
@@ -72,10 +71,13 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert {:correct, 4} = Server.guess(game_id, guess_data)
+      {:ok, state} = Server.guess(game_id, guess_data)
+
+      assert state.status == :won
+      assert state.last_matches == 4
     end
 
-    test "returns {:incorrect, matches} with correct match count", %{game_id: game_id} do
+    test "returns state with correct match count", %{game_id: game_id} do
       guess_data = %{
         shape: "circle",
         colour: "red",
@@ -83,16 +85,10 @@ defmodule Cipher.Game.ServerTest do
         direction: "top"
       }
 
-      result = Server.guess(game_id, guess_data)
+      {:ok, state} = Server.guess(game_id, guess_data)
 
-      case result do
-        :correct ->
-          assert true
-
-        {:incorrect, matches} ->
-          assert is_integer(matches)
-          assert matches >= 0 and matches <= 3
-      end
+      assert is_integer(state.last_matches)
+      assert state.last_matches >= 0 and state.last_matches <= 3
     end
 
     test "returns error for invalid choice", %{game_id: game_id} do
@@ -187,7 +183,10 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert {:correct, 4} = Server.guess(game_id, guess_data)
+      {:ok, state} = Server.guess(game_id, guess_data)
+
+      assert state.status == :won
+      assert state.last_matches == 4
 
       {:ok, updated_state} = Server.get_internal_state(game_id)
       assert updated_state.status == :won
@@ -220,7 +219,8 @@ defmodule Cipher.Game.ServerTest do
         direction: Enum.find(secret_list, &(&1.kind == :direction)).name |> Atom.to_string()
       }
 
-      assert {:correct, 4} = Server.guess(game_id, correct_guess)
+      {:ok, won_state} = Server.guess(game_id, correct_guess)
+      assert won_state.status == :won
 
       another_guess = %{shape: "square", colour: "blue", pattern: "checkered", direction: "left"}
       assert {:error, {:game_not_active, :won}} = Server.guess(game_id, another_guess)
@@ -263,8 +263,9 @@ defmodule Cipher.Game.ServerTest do
         size: nil
       }
 
-      result = Server.guess(game_id, guess_data)
-      assert result in [{:incorrect, 0}, {:incorrect, 1}, {:incorrect, 2}, {:correct, 3}]
+      {:ok, state} = Server.guess(game_id, guess_data)
+
+      assert state.last_matches in 0..3
     end
 
     test "hard game requires size field" do
@@ -281,7 +282,9 @@ defmodule Cipher.Game.ServerTest do
         size: Enum.find(secret_list, &(&1.kind == :size)).name |> Atom.to_string()
       }
 
-      assert {:correct, 5} = Server.guess(game_id, correct_guess)
+      {:ok, won_state} = Server.guess(game_id, correct_guess)
+      assert won_state.status == :won
+      assert won_state.last_matches == 5
     end
   end
 

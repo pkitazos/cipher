@@ -1,6 +1,6 @@
 defmodule CipherWeb.GameController do
   use CipherWeb, :controller
-  alias Cipher.Game
+  alias Cipher.Games
 
   action_fallback CipherWeb.FallbackController
 
@@ -8,7 +8,7 @@ defmodule CipherWeb.GameController do
   def create(conn, params) do
     difficulty = parse_difficulty(params["difficulty"])
 
-    with {:ok, game_id} <- Game.Server.start_game(difficulty) do
+    with {:ok, game_id} <- Games.Server.start_game(difficulty) do
       render(conn, :show, game_id: game_id)
     end
   end
@@ -26,7 +26,7 @@ defmodule CipherWeb.GameController do
 
   # GET /api/games/:id
   def show(conn, %{"id" => id}) do
-    with {:ok, game} <- Game.Server.get_client_state(id) do
+    with {:ok, game} <- Games.Server.get_client_state(id) do
       render(conn, :show, game: game)
     end
   end
@@ -41,7 +41,7 @@ defmodule CipherWeb.GameController do
       size: guess_params["size"]
     }
 
-    case Game.Server.guess(id, guess_data) do
+    case Games.Server.guess(id, guess_data) do
       {:ok, game_state} ->
         result =
           if game_state.status == :won do
@@ -59,7 +59,7 @@ defmodule CipherWeb.GameController do
 
   # POST /api/games/:id/level_up
   def level_up(conn, %{"game_id" => id}) do
-    with {:ok, new_game_id} <- Game.Server.level_up(id) do
+    with {:ok, new_game_id} <- Games.Server.level_up(id) do
       render(conn, :show, game_id: new_game_id)
     end
   end

@@ -30,7 +30,7 @@
         :for={choice <- sort_guess(guess)}
         class="grid place-items-center size-10 rounded-md bg-slate-300"
       >
-        {Game.Choice.show(choice)}
+        {Choice.show(choice)}
       </div>
       <div class="grid place-items-center size-10 rounded-md bg-slate-200">
         {matches}
@@ -40,24 +40,27 @@
 
   <div :if={@game} class="flex flex-col gap-2">
     <div class="flex flex-row gap-2">
-      <div :for={kind <- Game.get_active_categories(@game.difficulty)} class="flex flex-col gap-2">
+      <div
+        :for={kind <- GameLogic.get_active_categories(@game.difficulty)}
+        class="flex flex-col gap-2"
+      >
         <div class="grid place-items-center size-10 rounded-md bg-slate-200">
-          {if(@guess[kind] != nil, do: Game.Choice.show(@guess[kind]))}
+          {if(@guess[kind] != nil, do: Choice.show(@guess[kind]))}
         </div>
         <button
-          :for={choice <- Game.get_choices_for_category(kind)}
+          :for={choice <- GameLogic.get_choices_for_category(kind)}
           phx-click="select_choice"
           phx-value-kind={kind}
           phx-value-choice={choice.name}
           class="grid place-items-center size-10 rounded-md bg-slate-300"
         >
-          {Game.Choice.show(choice)}
+          {Choice.show(choice)}
         </button>
       </div>
     </div>
 
     <.button
-      disabled={map_size(@guess) != length(Game.get_active_categories(@game.difficulty))}
+      disabled={map_size(@guess) != length(GameLogic.get_active_categories(@game.difficulty))}
       phx-click="make_guess"
       class="bg-zinc-900 text-white disabled:bg-zinc-400 disabled:cursor-not-allowed disabled:hover:bg-zinc-400"
     >
