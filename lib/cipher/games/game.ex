@@ -1,8 +1,7 @@
-defmodule Cipher.Game.Schema do
+defmodule Cipher.Games.Game do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Cipher.Game.GuessSchema
   alias Cipher.Accounts.User
 
   @choice_names [
@@ -29,22 +28,21 @@ defmodule Cipher.Game.Schema do
   ]
 
   schema "games" do
-    field(:status, Ecto.Enum, values: [:active, :won, :abandoned, :expired])
+    field(:status, Ecto.Enum, values: [:won, :active, :abandoned], default: :active)
     field(:difficulty, Ecto.Enum, values: [:easy, :normal, :hard])
-
-    # Stores the secret as an array of atoms (mapped to Postgres ENUM array)
-    field(:secret, {:array, Ecto.Enum}, values: @choice_names, type: :string)
-    # field(:secret, {:array, Ecto.Enum}, values: @choice_names)
+    field(:secret, {:array, Ecto.Enum}, values: @choice_names)
 
     belongs_to(:user, User)
-    has_many(:guesses, GuessSchema, foreign_key: :game_id)
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
+  @doc false
   def changeset(game, attrs) do
     game
+    # We add :user_id to the cast list so it can be saved
     |> cast(attrs, [:status, :difficulty, :secret, :user_id])
     |> validate_required([:status, :difficulty, :secret])
+    |> foreign_key_constraint(:user_id)
   end
 end
