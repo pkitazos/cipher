@@ -28,6 +28,13 @@ defmodule Cipher.Games.Choice do
     @shape_order ++ @colour_order ++ @pattern_order ++ @direction_order ++ @size_order
   end
 
+  @spec options(kind()) :: [atom()]
+  def options(:shape), do: @shape_order
+  def options(:colour), do: @colour_order
+  def options(:pattern), do: @pattern_order
+  def options(:direction), do: @direction_order
+  def options(:size), do: @size_order
+
   @spec from_name(atom()) :: t()
   def from_name(name) when name in @shape_order, do: %__MODULE__{kind: :shape, name: name}
   def from_name(name) when name in @colour_order, do: %__MODULE__{kind: :colour, name: name}

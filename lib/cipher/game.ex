@@ -76,12 +76,17 @@ defmodule Cipher.Game do
         [] -> nil
       end
 
+    secret =
+      db_game.secret
+      |> Enum.map(&Cipher.Games.Choice.from_name/1)
+      |> MapSet.new()
+
     %__MODULE__{
       id: db_game.id,
       user_id: db_game.user_id,
       difficulty: db_game.difficulty,
       status: db_game.status,
-      secret: MapSet.new(db_game.secret),
+      secret: secret,
       guesses: guesses_runtime,
       last_matches: last_matches
     }

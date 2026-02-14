@@ -98,6 +98,9 @@ defmodule Cipher.Games.Server do
   # Handle MapSet guess (from LiveView/TUI - already converted)
   @impl true
   def handle_call({:guess, %MapSet{} = guess}, _from, state) do
+    Logger.info("[#{state.id}] Guess data : #{inspect(guess)}")
+    Logger.info("[#{state.id}] Secret : #{inspect(state.secret)}")
+
     matches = Logic.calculate_matches(guess, state.secret)
     secret_size = MapSet.size(state.secret)
 

@@ -17,6 +17,8 @@ defmodule Cipher.Games do
   def start_new_game(user, difficulty) do
     secret_structs = Logic.initialise_secret(difficulty)
 
+    Logger.info("[new game] secret: #{inspect(secret_structs)}")
+
     attrs = %{
       user_id: user.id,
       difficulty: difficulty,
@@ -80,14 +82,21 @@ defmodule Cipher.Games do
   and converts it to a MapSet for the Server.
   """
   def make_guess(game_id, guess_map) do
-    # 1. Convert UI Map -> Domain MapSet
+    {:ok, game} = get_running_game(game_id)
+
+    # convert UI Map -> domain MapSet
     guess_set =
       guess_map
       |> Map.values()
       |> MapSet.new()
 
-    # 2. Call Server
-    Server.guess(game_id, guess_set)
+    case Cipher.Games.Logic.validate_guess(guess_set, game.difficulty) do
+      :ok ->
+        Server.guess(game_id, guess_set)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
