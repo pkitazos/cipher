@@ -42,16 +42,18 @@ defmodule CipherWeb.GameController do
     }
 
     case Game.Server.guess(id, guess_data) do
-      {:correct, matches} -> render(conn, :guess_result, result: {:correct, matches})
-      {:incorrect, matches} -> render(conn, :guess_result, result: {:incorrect, matches})
-      {:error, reason} -> {:error, reason}
-    end
-  end
+      {:ok, game_state} ->
+        result =
+          if game_state.status == :won do
+            {:correct, game_state.last_matches}
+          else
+            {:incorrect, game_state.last_matches}
+          end
 
-  # POST /api/games/:id/reset
-  def reset(conn, %{"game_id" => id}) do
-    with {:ok, game} <- Game.Server.reset_game(id) do
-      render(conn, :show, game: game)
+        render(conn, :guess_result, result: result)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

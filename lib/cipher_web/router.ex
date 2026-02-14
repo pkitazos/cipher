@@ -28,7 +28,9 @@ defmodule CipherWeb.Router do
   scope "/", CipherWeb do
     pipe_through :browser
 
-    live "/", GameLive
+    # a bit unclear about what the actions are for since this isn't a REST API
+    live "/", DifficultyLive, :index
+    live "/game/:game_id", GameLive, :show
   end
 
   scope "/api", CipherWeb do
@@ -36,7 +38,6 @@ defmodule CipherWeb.Router do
 
     resources "/games", GameController, only: [:create, :show] do
       post "/guess", GameController, :make_guess
-      post "/reset", GameController, :reset
       post "/level_up", GameController, :level_up
     end
   end

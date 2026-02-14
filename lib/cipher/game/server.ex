@@ -5,6 +5,10 @@ defmodule Cipher.Game.Server do
 
   @idle_timeout :timer.hours(1)
 
+  def start_link(game_id, difficulty) do
+    GenServer.start_link(__MODULE__, {game_id, difficulty}, name: via_tuple(game_id))
+  end
+
   def start_game(difficulty \\ :normal)
 
   def start_game(difficulty) do
@@ -23,8 +27,18 @@ defmodule Cipher.Game.Server do
     end
   end
 
-  def start_link(game_id, difficulty) do
-    GenServer.start_link(__MODULE__, {game_id, difficulty}, name: via_tuple(game_id))
+  def stop(game_id) do
+    case GenServer.whereis(via_tuple(game_id)) do
+      nil -> :ok
+      pid -> GenServer.stop(pid)
+    end
+  end
+
+  def abandon_game(game_id) do
+    case Registry.lookup(Cipher.GameRegistry, game_id) do
+      [{pid, _value}] -> GenServer.call(pid, :mark_abandoned)
+      [] -> {:error, :game_not_found}
+    end
   end
 
   def get_client_state(game_id) do
@@ -37,13 +51,6 @@ defmodule Cipher.Game.Server do
   def guess(game_id, guess_data) do
     case Registry.lookup(Cipher.GameRegistry, game_id) do
       [{pid, _value}] -> GenServer.call(pid, {:guess, guess_data})
-      [] -> {:error, :game_not_found}
-    end
-  end
-
-  def reset_game(game_id) do
-    case Registry.lookup(Cipher.GameRegistry, game_id) do
-      [{pid, _value}] -> GenServer.call(pid, :reset)
       [] -> {:error, :game_not_found}
     end
   end
@@ -76,6 +83,12 @@ defmodule Cipher.Game.Server do
   end
 
   @impl true
+  def handle_call(:mark_abandoned, _from, state) do
+    updated_state = %{state | status: :abandoned}
+    {:reply, {:ok, updated_state}, state, @idle_timeout}
+  end
+
+  @impl true
   def handle_call(:internal_state, _from, state) do
     {:reply, {:ok, state}, state, @idle_timeout}
   end
@@ -84,21 +97,6 @@ defmodule Cipher.Game.Server do
   def handle_call(:client_state, _from, state) do
     client_safe_state = Map.drop(state, [:secret])
     {:reply, {:ok, client_safe_state}, state, @idle_timeout}
-  end
-
-  @impl true
-  def handle_call(:reset, _from, state) do
-    Logger.info("[#{state.id}] Resetting game")
-
-    reset_state = %{
-      state
-      | secret: Game.initialise_secret(state.difficulty),
-        guesses: [],
-        last_matches: nil,
-        status: :active
-    }
-
-    {:reply, {:ok, reset_state}, reset_state, @idle_timeout}
   end
 
   @impl true
@@ -135,18 +133,22 @@ defmodule Cipher.Game.Server do
       matches = Game.calculate_matches(guess, state.secret)
       secret_size = MapSet.size(state.secret)
 
-      updated_state = %{state | guesses: [{guess, matches} | state.guesses]}
+      updated_state = %{
+        state
+        | guesses: [{guess, matches} | state.guesses],
+          last_matches: matches
+      }
 
-      cond do
-        matches == secret_size ->
-          Logger.info("[#{state.id}] Guess correct!")
-          won_state = %{updated_state | status: :won}
-          {:reply, {:correct, secret_size}, won_state, @idle_timeout}
+      new_status = if matches == secret_size, do: :won, else: :active
 
-        true ->
-          Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
-          {:reply, {:incorrect, matches}, updated_state, @idle_timeout}
-      end
+      final_state = %{updated_state | status: new_status}
+
+      Logger.info(
+        "[#{state.id}] Guess #{if new_status == :won, do: "correct", else: "incorrect"} (matches: #{matches})"
+      )
+
+      filtered_state = Map.drop(final_state, [:secret])
+      {:reply, {:ok, filtered_state}, final_state, @idle_timeout}
     else
       {:error, {:invalid_choice, kind, value}} ->
         Logger.warning("[#{state.id}] Invalid #{kind}: #{value}")

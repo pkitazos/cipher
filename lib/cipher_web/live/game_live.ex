@@ -3,36 +3,24 @@ defmodule CipherWeb.GameLive do
 
   alias Cipher.Game
 
-  # This is called when the LiveView loads.
-  # We initialize with `game_id: nil`
-  def mount(_params, _session, socket) do
-    socket =
-      socket
-      |> assign(game: nil)
-      |> assign(difficulty: nil)
-      |> assign(guess: nil)
+  def mount(%{"game_id" => game_id}, _session, socket) do
+    case Game.Server.get_client_state(game_id) do
+      {:ok, game_state} ->
+        socket =
+          socket
+          |> assign(game: game_state)
+          |> assign(guess: %{})
 
-    {:ok, socket}
-  end
+        {:ok, socket}
 
-  # In LiveView events are handled using the `handle_event/3` function
-  # Whatever we call our event, in this case `"start_game"` is what we match on
-  def handle_event("start_game", _params, socket) do
-    with {:ok, game_id} <- Game.Server.start_game(socket.assigns.difficulty),
-         {:ok, game_state} <- Game.Server.get_client_state(game_id) do
-      socket =
-        socket
-        |> assign(game: Map.drop(game_state, [:secret]))
-        |> assign(guess: %{})
+      {:error, reason} ->
+        socket =
+          socket
+          |> put_flash(:error, "Failed to load game: #{reason}")
+          |> push_navigate(to: "/")
 
-      {:noreply, socket}
-    else
-      {:error, reason} -> {:noreply, put_flash(socket, :error, "Failed to start game: #{reason}")}
+        {:ok, socket}
     end
-  end
-
-  def handle_event("set_difficulty", %{"difficulty" => difficulty}, socket) do
-    {:noreply, assign(socket, difficulty: String.to_existing_atom(difficulty))}
   end
 
   def handle_event("select_choice", %{"kind" => kind, "choice" => choice_name}, socket) do
@@ -64,6 +52,23 @@ defmodule CipherWeb.GameLive do
       {:noreply, socket}
     end
   end
+
+  # this also feels a little weird it's so similar to the start and restart functions
+  def handle_event("level_up", _params, socket) do
+    with {:ok, game_id} <- Game.Server.level_up(socket.assigns.game.id),
+         {:ok, game_state} <- Game.Server.get_client_state(game_id) do
+      socket =
+        socket
+        |> assign(game: game_state)
+        |> assign(guess: %{})
+
+      {:noreply, socket}
+    else
+      {:error, reason} -> {:noreply, put_flash(socket, :error, "Failed to start game: #{reason}")}
+    end
+  end
+
+  # helpers
 
   defp difficulty_class(:easy), do: "text-green-500"
   defp difficulty_class(:normal), do: "text-blue-500"
