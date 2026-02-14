@@ -3,6 +3,7 @@ defmodule Cipher.Games.Game do
   import Ecto.Changeset
 
   alias Cipher.Accounts.User
+  alias Cipher.Games.Guess
 
   schema "games" do
     field(:status, Ecto.Enum, values: [:won, :active, :abandoned], default: :active)
@@ -10,6 +11,8 @@ defmodule Cipher.Games.Game do
     field(:secret, {:array, Ecto.Enum}, values: Cipher.Games.Choice.values())
 
     belongs_to(:user, User)
+
+    has_many(:guesses, Guess)
 
     timestamps(type: :utc_datetime)
   end

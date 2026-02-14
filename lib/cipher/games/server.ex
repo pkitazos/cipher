@@ -2,14 +2,13 @@ defmodule Cipher.Games.Server do
   use GenServer
   require Logger
 
-  alias Cipher.Games
   alias Cipher.Games.Logic
 
   @idle_timeout :timer.hours(1)
 
   def ensure_started(game) do
     child_spec = %{
-      id: __MODULE__,
+      id: {__MODULE__, game.id},
       start: {__MODULE__, :start_link, [game]},
       restart: :temporary
     }
@@ -68,19 +67,8 @@ defmodule Cipher.Games.Server do
   def init(game) do
     # The Server calls the Context, and the Context calls the Repo.
     # This restores the state if the server crashes and restarts.
-
-    state = %{
-      id: game.id,
-      difficulty: game.difficulty,
-      secret: MapSet.new(game.secret),
-      # todo: might want to load existing guesses here later
-      guesses: [],
-      last_matches: nil,
-      status: game.status
-    }
-
     Logger.info("[#{game.id}] GameServer started for Game ##{game.id}")
-    {:ok, state, @idle_timeout}
+    {:ok, game, @idle_timeout}
   end
 
   @impl true

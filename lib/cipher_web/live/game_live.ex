@@ -1,29 +1,22 @@
 defmodule CipherWeb.GameLive do
   use CipherWeb, :live_view
 
+  alias CipherWeb.GameComponents
   alias Cipher.Games.Server, as: GameServer
   alias Cipher.Games.Logic, as: GameLogic
   alias Cipher.Games.Choice
+  alias Cipher.Games
 
-  def mount(%{"game_id" => game_id}, _session, socket) do
-    game_id = String.to_integer(game_id)
+  def mount(%{"game_id" => id}, _session, socket) do
+    case Games.get_running_game(String.to_integer(id)) do
+      {:ok, game} ->
+        {:ok, assign(socket, game: game, guess: %{})}
 
-    case GameServer.get_client_state(game_id) do
-      {:ok, game_state} ->
-        socket =
-          socket
-          |> assign(game: game_state)
-          |> assign(guess: %{})
-
-        {:ok, socket}
-
-      {:error, reason} ->
-        socket =
-          socket
-          |> put_flash(:error, "Failed to load game: #{reason}")
-          |> push_navigate(to: "/")
-
-        {:ok, socket}
+      {:error, :not_found} ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Game not found")
+         |> push_navigate(to: ~p"/")}
     end
   end
 
@@ -71,16 +64,6 @@ defmodule CipherWeb.GameLive do
       {:error, reason} -> {:noreply, put_flash(socket, :error, "Failed to start game: #{reason}")}
     end
   end
-
-  # helpers
-
-  defp difficulty_class(:easy), do: "text-green-500"
-  defp difficulty_class(:normal), do: "text-blue-500"
-  defp difficulty_class(:hard), do: "text-red-500"
-
-  defp status_class(:active), do: "text-lime-500"
-  defp status_class(:won), do: "text-indigo-400"
-  defp status_class(:expired), do: "text-red-500"
 
   defp sort_guess(guess) do
     guess

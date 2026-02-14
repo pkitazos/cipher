@@ -5,6 +5,7 @@ defmodule Cipher.Games do
   require Logger
   import Ecto.Query, warn: false
   alias Cipher.Repo
+  alias Cipher.Game, as: GameDTO
   alias Cipher.Games.{Game, Guess, Logic, Server}
 
   @doc """
@@ -19,14 +20,14 @@ defmodule Cipher.Games do
     attrs = %{
       user_id: user.id,
       difficulty: difficulty,
-      secret: Enum.map(secret_structs, & &1.name),
-      status: :active
+      secret: Enum.map(secret_structs, & &1.name)
     }
 
     # We use Repo.transaction to ensure we don't create a DB record
     # if the Server fails to start.
     Cipher.Repo.transaction(fn ->
-      with {:ok, game} <- create_game(attrs),
+      with {:ok, db_record} <- create_game(attrs),
+           game <- GameDTO.new(db_record),
            {:ok, _pid} <- Server.ensure_started(game) do
         game
       else
@@ -35,6 +36,69 @@ defmodule Cipher.Games do
           Cipher.Repo.rollback(reason)
       end
     end)
+  end
+
+  @doc """
+  Gets the game state.
+  If the GenServer is down (e.g., after a deploy), it transparently restarts it.
+  """
+  def get_running_game(game_id) do
+    case Server.get_client_state(game_id) do
+      {:ok, state} -> {:ok, state}
+      {:error, :game_not_found} -> restore_game_session(game_id)
+    end
+  end
+
+  # Private helper to handle the "Cold Boot" logic
+  defp restore_game_session(game_id) do
+    case get_game_with_history(game_id) do
+      nil ->
+        {:error, :not_found}
+
+      db_record ->
+        game_dto = GameDTO.new(db_record)
+        {:ok, _pid} = Server.ensure_started(game_dto)
+        {:ok, GameDTO.client_view(game_dto)}
+    end
+  end
+
+  defp get_game_with_history(id) do
+    Game
+    |> Repo.get(id)
+    |> Repo.preload(guesses: from(g in Guess, order_by: [desc: g.inserted_at]))
+  end
+
+  def get_game_with_history!(id) do
+    Game
+    |> Repo.get!(id)
+    |> Repo.preload(guesses: from(g in Guess, order_by: [desc: g.inserted_at]))
+  end
+
+  @doc """
+  Submits a guess to the running game.
+  Accepts a map of %{kind => %Choice{}} (from the UI)
+  and converts it to a MapSet for the Server.
+  """
+  def make_guess(game_id, guess_map) do
+    # 1. Convert UI Map -> Domain MapSet
+    guess_set =
+      guess_map
+      |> Map.values()
+      |> MapSet.new()
+
+    # 2. Call Server
+    Server.guess(game_id, guess_set)
+  end
+
+  @doc """
+  Progresses the game to the next difficulty level.
+  Returns the NEW game state (for the new game ID).
+  """
+  def level_up(current_game_id) do
+    with {:ok, new_game_id} <- Server.level_up(current_game_id),
+         {:ok, new_game_state} <- get_running_game(new_game_id) do
+      {:ok, new_game_state}
+    end
   end
 
   @doc """

@@ -1,11 +1,6 @@
 <div class="flex flex-col justify-center items-center gap-4">
-  <div :if={@game} class="flex flex-col items-center mt-8 p-4 bg-zinc-100 rounded">
-    <p class="text-sm text-zinc-600">Game ID</p>
-    <p class="font-mono text-lg">{@game.id}</p>
-    <p class="mt-4 text-sm text-zinc-600">Difficulty</p>
-    <p class={["font-mono text-lg", difficulty_class(@game.difficulty)]}>{@game.difficulty}</p>
-    <p class="mt-4 text-sm text-zinc-600">Status</p>
-    <p class={["font-mono text-lg", status_class(@game.status)]}>{@game.status}</p>
+  <div :if={@game}>
+    <GameComponents.game_status_card game={@game} />
   </div>
 
   <div :if={@game} class="flex flex-row gap-5">
@@ -25,14 +20,18 @@
   <div :if={@game} class="flex flex-col gap-2 items-center">
     <h2 class="text-xl font-semibold">History</h2>
     <p :if={@game.guesses == []} class="text-zinc-500 text-sm">No guesses yet</p>
-    <div :for={{guess, matches} <- Enum.reverse(@game.guesses)} class="flex flex-row gap-2">
+
+    <div
+      :for={{guess_set, matches} <- Enum.reverse(@game.guesses)}
+      class="flex flex-row gap-2"
+    >
       <div
-        :for={choice <- sort_guess(guess)}
-        class="grid place-items-center size-10 rounded-md bg-slate-300"
+        :for={choice_struct <- sort_guess(guess_set)}
+        class="grid place-items-center size-10 rounded-md bg-slate-800 text-white"
       >
-        {Choice.show(choice)}
+        {Choice.show(choice_struct)}
       </div>
-      <div class="grid place-items-center size-10 rounded-md bg-slate-200">
+      <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
         {matches}
       </div>
     </div>
@@ -41,30 +40,37 @@
   <div :if={@game} class="flex flex-col gap-2">
     <div class="flex flex-row gap-2">
       <div
-        :for={kind <- GameLogic.get_active_categories(@game.difficulty)}
+        :for={kind <- Logic.get_active_categories(@game.difficulty)}
         class="flex flex-col gap-2"
       >
-        <div class="grid place-items-center size-10 rounded-md bg-slate-200">
-          {if(@guess[kind] != nil, do: Choice.show(@guess[kind]))}
+        <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
+          {if(@guess[kind], do: Choice.show(@guess[kind]))}
         </div>
+
         <button
-          :for={choice <- GameLogic.get_choices_for_category(kind)}
+          :for={choice_struct <- Logic.get_choices_for_category(kind)}
           phx-click="select_choice"
           phx-value-kind={kind}
-          phx-value-choice={choice.name}
-          class="grid place-items-center size-10 rounded-md bg-slate-300"
+          phx-value-choice={choice_struct.name}
+          class={[
+            "grid place-items-center size-10 rounded-md transition-colors",
+            if(@guess[kind] && @guess[kind].name == choice_struct.name,
+              do: "bg-blue-600 text-white",
+              else: "bg-slate-800 text-zinc-400 hover:bg-slate-600"
+            )
+          ]}
         >
-          {Choice.show(choice)}
+          {Choice.show(choice_struct)}
         </button>
       </div>
     </div>
 
     <.button
-      disabled={map_size(@guess) != length(GameLogic.get_active_categories(@game.difficulty))}
+      disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty))}
       phx-click="make_guess"
-      class="bg-zinc-900 text-white disabled:bg-zinc-400 disabled:cursor-not-allowed disabled:hover:bg-zinc-400"
+      class="bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed mt-4 w-full"
     >
-      guess
+      Submit Guess
     </.button>
   </div>
 </div>

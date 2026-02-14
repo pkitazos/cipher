@@ -28,6 +28,15 @@ defmodule Cipher.Games.Choice do
     @shape_order ++ @colour_order ++ @pattern_order ++ @direction_order ++ @size_order
   end
 
+  @spec from_name(atom()) :: t()
+  def from_name(name) when name in @shape_order, do: %__MODULE__{kind: :shape, name: name}
+  def from_name(name) when name in @colour_order, do: %__MODULE__{kind: :colour, name: name}
+  def from_name(name) when name in @pattern_order, do: %__MODULE__{kind: :pattern, name: name}
+  def from_name(name) when name in @direction_order, do: %__MODULE__{kind: :direction, name: name}
+  def from_name(name) when name in @size_order, do: %__MODULE__{kind: :size, name: name}
+
+  def from_name(name), do: raise("Unknown choice name: #{inspect(name)}")
+
   @spec show(t()) :: String.t()
   def show(%Choice{name: :circle}), do: "O"
   def show(%Choice{name: :square}), do: "[]"
