@@ -19,6 +19,15 @@ config :cipher, CipherWeb.Endpoint,
     tailwind: {Tailwind, :install_and_run, [:cipher, ~w(--watch)]}
   ]
 
+config :cipher, Cipher.Repo,
+  username: "cipher",
+  password: "cipher",
+  hostname: "localhost",
+  database: "cipher_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

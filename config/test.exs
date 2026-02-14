@@ -7,6 +7,14 @@ config :cipher, CipherWeb.Endpoint,
   secret_key_base: "9XJ3Beq2EEM7UzJmjhqGjQGomYp74k9QNbqqbRwMUsDhXSyZ54QXf3wkirShjQWy",
   server: false
 
+config :cipher, Cipher.Repo,
+  username: "cipher",
+  password: "cipher",
+  hostname: "localhost",
+  database: "cipher_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 10
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

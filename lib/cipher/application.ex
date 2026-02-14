@@ -8,6 +8,7 @@ defmodule Cipher.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Cipher.Repo,
       CipherWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:cipher, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Cipher.PubSub},

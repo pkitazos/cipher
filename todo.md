@@ -206,10 +206,10 @@
 ## Technical Debt / Nice-to-Haves
 
 #### [T1]
-- [ ] Add `last_matches` field to state (for returning in guess response)
+- [x] Add `last_matches` field to state (for returning in guess response)
 
 #### [T2]
-- [ ] Change `guess/2` return type from `{:correct, n} | {:incorrect, n}` to `{:ok, state}`
+- [x] Change `guess/2` return type from `{:correct, n} | {:incorrect, n}` to `{:ok, state}`
 
 #### [T3]
 - [ ] Add proper logging for all lifecycle events
@@ -222,3 +222,6 @@
 
 #### [T6]
 - [ ] Add proper validation for difficulty parameter in all functions
+
+#### [T7]
+- [ ] Add script that checks all `choices` are in sync across all the files hey are used in

@@ -8,7 +8,8 @@
 import Config
 
 config :cipher,
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  ecto_repos: [Cipher.Repo]
 
 # Configure the endpoint
 config :cipher, CipherWeb.Endpoint,

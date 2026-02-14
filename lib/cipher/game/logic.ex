@@ -1,4 +1,4 @@
-defmodule Cipher.Game do
+defmodule Cipher.Game.Logic do
   require Logger
   alias Cipher.Game.Choice
 

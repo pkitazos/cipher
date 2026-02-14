@@ -57,7 +57,9 @@ defmodule Cipher.MixProject do
        sparse: "optimized",
        app: false,
        compile: false,
-       depth: 1}
+       depth: 1},
+      {:ecto_sql, "~> 3.10"},
+      {:postgrex, ">= 0.0.0"}
     ]
   end
 
