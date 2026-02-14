@@ -1,5 +1,5 @@
-defmodule Cipher.Game.Choice do
-  alias Cipher.Game.Choice
+defmodule Cipher.Games.Choice do
+  alias Cipher.Games.Choice
 
   @type kind :: :shape | :colour | :pattern | :direction | :size
   @type shape_name :: :circle | :square | :star | :triangle
@@ -23,6 +23,10 @@ defmodule Cipher.Game.Choice do
   @pattern_order [:vertical_stripes, :horizontal_stripes, :checkered, :dotted]
   @direction_order [:top, :bottom, :left, :right]
   @size_order [:tiny, :small, :medium, :large]
+
+  def values do
+    @shape_order ++ @colour_order ++ @pattern_order ++ @direction_order ++ @size_order
+  end
 
   @spec show(t()) :: String.t()
   def show(%Choice{name: :circle}), do: "O"
@@ -84,8 +88,8 @@ defmodule Cipher.Game.Choice do
   end
 end
 
-defimpl Inspect, for: Cipher.Game.Choice do
-  alias Cipher.Game.Choice
+defimpl Inspect, for: Cipher.Games.Choice do
+  alias Cipher.Games.Choice
 
   def inspect(choice, _opts) do
     symbol = Choice.show(choice)

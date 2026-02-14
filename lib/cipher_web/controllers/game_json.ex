@@ -1,5 +1,5 @@
 defmodule CipherWeb.GameJSON do
-  alias Cipher.Game.Choice
+  alias Cipher.Games.Choice
 
   # For creating a game: POST /api/games
   def show(%{game_id: id}) do

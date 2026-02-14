@@ -1,6 +1,6 @@
 defmodule Cipher.Game.Logic do
   require Logger
-  alias Cipher.Game.Choice
+  alias Cipher.Games.Choice
 
   @type difficulty :: :easy | :normal | :hard
   @type guess_map :: %{

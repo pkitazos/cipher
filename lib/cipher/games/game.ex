@@ -4,33 +4,10 @@ defmodule Cipher.Games.Game do
 
   alias Cipher.Accounts.User
 
-  @choice_names [
-    :circle,
-    :square,
-    :star,
-    :triangle,
-    :red,
-    :green,
-    :blue,
-    :yellow,
-    :vertical_stripes,
-    :horizontal_stripes,
-    :checkered,
-    :dotted,
-    :top,
-    :bottom,
-    :left,
-    :right,
-    :tiny,
-    :small,
-    :medium,
-    :large
-  ]
-
   schema "games" do
     field(:status, Ecto.Enum, values: [:won, :active, :abandoned], default: :active)
     field(:difficulty, Ecto.Enum, values: [:easy, :normal, :hard])
-    field(:secret, {:array, Ecto.Enum}, values: @choice_names)
+    field(:secret, {:array, Ecto.Enum}, values: Cipher.Games.Choice.values())
 
     belongs_to(:user, User)
 

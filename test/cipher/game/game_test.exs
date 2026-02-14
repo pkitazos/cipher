@@ -1,7 +1,7 @@
 defmodule Cipher.GameTest do
   use ExUnit.Case, async: true
   alias Cipher.Game
-  alias Cipher.Game.Choice
+  alias Cipher.Games.Choice
 
   describe "initialise_secret/0" do
     test "returns a MapSet with 4 choices" do
