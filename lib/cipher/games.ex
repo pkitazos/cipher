@@ -2,11 +2,40 @@ defmodule Cipher.Games do
   @moduledoc """
   The Games context.
   """
-
+  require Logger
   import Ecto.Query, warn: false
   alias Cipher.Repo
+  alias Cipher.Games.{Game, Guess, Logic, Server}
 
-  alias Cipher.Games.Game
+  @doc """
+  Orchestrates creating a game.
+  1. Generates secret (Logic)
+  2. Saves to DB (Repo)
+  3. Starts GenServer (Server)
+  """
+  def start_new_game(user, difficulty) do
+    secret_structs = Logic.initialise_secret(difficulty)
+
+    attrs = %{
+      user_id: user.id,
+      difficulty: difficulty,
+      secret: Enum.map(secret_structs, & &1.name),
+      status: :active
+    }
+
+    # We use Repo.transaction to ensure we don't create a DB record
+    # if the Server fails to start.
+    Cipher.Repo.transaction(fn ->
+      with {:ok, game} <- create_game(attrs),
+           {:ok, _pid} <- Server.ensure_started(game) do
+        game
+      else
+        {:error, reason} ->
+          Logger.error("Failed to start game: #{inspect(reason)}")
+          Cipher.Repo.rollback(reason)
+      end
+    end)
+  end
 
   @doc """
   Returns the list of games.

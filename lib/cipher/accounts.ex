@@ -5,8 +5,24 @@ defmodule Cipher.Accounts do
 
   import Ecto.Query, warn: false
   alias Cipher.Repo
-
   alias Cipher.Accounts.User
+
+  @doc """
+  Creates a temporary guest user.
+  """
+  def create_guest_user do
+    # Generate a random ID to ensure uniqueness
+    uid = Ecto.UUID.generate()
+
+    %User{}
+    |> User.changeset(%{
+      email: "guest_#{uid}@cipher.game",
+      username: "Guest_#{String.slice(uid, 0, 5)}",
+      provider: "guest",
+      uid: uid
+    })
+    |> Repo.insert()
+  end
 
   @doc """
   Returns the list of users.

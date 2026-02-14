@@ -1,30 +1,28 @@
 defmodule Cipher.Games.Server do
   use GenServer
   require Logger
-  alias Cipher.Games.Logic, as: GameLogic
+
+  alias Cipher.Games
+  alias Cipher.Games.Logic
 
   @idle_timeout :timer.hours(1)
 
-  def start_link(game_id, difficulty) do
-    GenServer.start_link(__MODULE__, {game_id, difficulty}, name: via_tuple(game_id))
-  end
-
-  def start_game(difficulty \\ :normal)
-
-  def start_game(difficulty) do
-    game_id = UUID.uuid4()
-
+  def ensure_started(game) do
     child_spec = %{
       id: __MODULE__,
-      start: {__MODULE__, :start_link, [game_id, difficulty]},
+      start: {__MODULE__, :start_link, [game]},
       restart: :temporary
     }
 
     case DynamicSupervisor.start_child(Cipher.GameSupervisor, child_spec) do
-      {:ok, _pid} -> {:ok, game_id}
-      {:error, {:already_started, _pid}} -> {:error, {:already_started, game_id}}
+      {:ok, pid} -> {:ok, pid}
+      {:error, {:already_started, pid}} -> {:ok, pid}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  def start_link(game) do
+    GenServer.start_link(__MODULE__, game, name: via_tuple(game.id))
   end
 
   def stop(game_id) do
@@ -58,8 +56,8 @@ defmodule Cipher.Games.Server do
   def level_up(game_id) do
     with [{pid, _value}] <- Registry.lookup(Cipher.GameRegistry, game_id),
          {:ok, game_state} <- GenServer.call(pid, :internal_state),
-         {:ok, next_difficulty} <- GameLogic.next_difficulty(game_state.difficulty) do
-      start_game(next_difficulty)
+         {:ok, _next_difficulty} <- Logic.next_difficulty(game_state.difficulty) do
+      {:ok, %{}}
     else
       [] -> {:error, :game_not_found}
       {:error, reason} -> {:error, reason}
@@ -67,18 +65,21 @@ defmodule Cipher.Games.Server do
   end
 
   @impl true
-  def init({game_id, difficulty}) do
+  def init(game) do
+    # The Server calls the Context, and the Context calls the Repo.
+    # This restores the state if the server crashes and restarts.
+
     state = %{
-      id: game_id,
-      difficulty: difficulty,
-      secret: GameLogic.initialise_secret(difficulty),
+      id: game.id,
+      difficulty: game.difficulty,
+      secret: MapSet.new(game.secret),
+      # todo: might want to load existing guesses here later
       guesses: [],
       last_matches: nil,
-      status: :active
+      status: game.status
     }
 
-    Logger.info("[#{game_id}] GameServer initialized with difficulty #{difficulty}")
-    Logger.debug("[#{game_id}] GameServer state: #{inspect(state)}")
+    Logger.info("[#{game.id}] GameServer started for Game ##{game.id}")
     {:ok, state, @idle_timeout}
   end
 
@@ -109,7 +110,7 @@ defmodule Cipher.Games.Server do
   # Handle MapSet guess (from LiveView/TUI - already converted)
   @impl true
   def handle_call({:guess, %MapSet{} = guess}, _from, state) do
-    matches = GameLogic.calculate_matches(guess, state.secret)
+    matches = Logic.calculate_matches(guess, state.secret)
     secret_size = MapSet.size(state.secret)
 
     updated_state = %{state | guesses: [{guess, matches} | state.guesses], last_matches: matches}
@@ -129,8 +130,8 @@ defmodule Cipher.Games.Server do
   # Handle string map guess (from HTTP API - needs conversion)
   @impl true
   def handle_call({:guess, guess_data}, _from, state) when is_map(guess_data) do
-    with {:ok, guess} <- GameLogic.convert_guess_from_strings(guess_data, state.difficulty) do
-      matches = GameLogic.calculate_matches(guess, state.secret)
+    with {:ok, guess} <- Logic.convert_guess_from_strings(guess_data, state.difficulty) do
+      matches = Logic.calculate_matches(guess, state.secret)
       secret_size = MapSet.size(state.secret)
 
       updated_state = %{

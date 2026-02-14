@@ -6,6 +6,8 @@ defmodule CipherWeb.GameLive do
   alias Cipher.Games.Choice
 
   def mount(%{"game_id" => game_id}, _session, socket) do
+    game_id = String.to_integer(game_id)
+
     case GameServer.get_client_state(game_id) do
       {:ok, game_state} ->
         socket =
