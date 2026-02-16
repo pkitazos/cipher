@@ -4,6 +4,10 @@
   </div>
 
   <div :if={@game} class="flex flex-row gap-5">
+    <%!--
+    according to our new event handler implementation this button is meant to be visible at all times
+    if a user pressed the "New Game" button in the middle of an existing game, the current game becomes `abandoned`
+    --%>
     <.button
       :if={@game.status != :active}
       phx-click="new_game"

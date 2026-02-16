@@ -67,12 +67,12 @@
 
 #### [B2] Implement `abandon_game/1` functionality
 **Purpose:** Clean up game process when player starts a new game
-- [ ] Add `abandon_game/1` function to `Games.Server`
+- [x] Add `abandon_game/1` function to `Games.Server`
   - [x] Look up game process by ID
   - [x] Call `:mark_abandoned` handler to update status
   - [x] Stop the process gracefully with `GenServer.stop(pid, :normal)`
-  - [ ] Return `{:ok, abandoned_state}` for DB persistence
-  - [ ] Handle `:game_not_found` error case
+  - [x] Return `{:ok, abandoned_state}` for DB persistence
+  - [x] Handle `:game_not_found` error case
 - [x] Add `:mark_abandoned` GenServer handler
   - [x] Update state status to `:abandoned`
   - [x] Return updated state
@@ -84,19 +84,19 @@
 
 #### [B3] Refactor `level_up/1` functionality
 **Purpose:** Create new game at next difficulty, properly clean up old game
-- [ ] Update `level_up/1` implementation
+- [x] Update `level_up/1` implementation
   - [x] Look up current game process
   - [x] Get internal state (including secret for validation)
-  - [ ] **Verify game status is `:won`** (return error if not)
+  - [x] **Verify game status is `:won`** (return error if not)
   - [x] Get next difficulty via `Game.next_difficulty/1`
   - [x] Start new game at next difficulty
   - [x] Mark old game as `:won` (already won, no need for separate status)
-  - [ ] Stop old game process
+  - [x] Stop old game process
   - [x] Return `{:ok, new_game_id}`
-  - [ ] Handle error cases:
-    - [ ] Game not found
-    - [ ] Game not won yet (`:game_not_won` error)
-    - [ ] Already at max difficulty (`:max_difficulty` error)
+  - [x] Handle error cases:
+    - [x] Game not found
+    - [x] Game not won yet (`:game_not_won` error)
+    - [x] Already at max difficulty (`:max_difficulty` error)
 - [ ] Update tests for `level_up/1`
   - [ ] Test successful level up from easy → normal
   - [ ] Test successful level up from normal → hard
@@ -129,7 +129,7 @@
 
 ---
 
-## Future: Database Persistence (Not Started)
+## Future: Database Persistence
 
 ### Database Schema Design
 

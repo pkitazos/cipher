@@ -8,6 +8,8 @@ defmodule Cipher.Games do
   alias Cipher.Game, as: GameDTO
   alias Cipher.Games.{Game, Guess, Logic, Server, Choice}
 
+  # --- Game Lifecycle (Creation & Progression) ---
+
   @doc """
   Orchestrates creating a game.
   1. Generates secret (Logic)
@@ -16,7 +18,6 @@ defmodule Cipher.Games do
   """
   def start_new_game(user, difficulty) do
     secret_structs = Logic.initialise_secret(difficulty)
-
     Logger.info("[new game] secret: #{inspect(secret_structs)}")
 
     attrs = %{
@@ -29,9 +30,9 @@ defmodule Cipher.Games do
     # if the Server fails to start.
     Cipher.Repo.transaction(fn ->
       with {:ok, db_record} <- create_game(attrs),
-           game <- GameDTO.new(db_record),
-           {:ok, _pid} <- Server.ensure_started(game) do
-        game
+           game_dto <- GameDTO.new(db_record),
+           {:ok, _pid} <- Server.ensure_started(game_dto) do
+        game_dto
       else
         {:error, reason} ->
           Logger.error("Failed to start game: #{inspect(reason)}")
@@ -39,6 +40,117 @@ defmodule Cipher.Games do
       end
     end)
   end
+
+  @doc """
+  Progresses the user to the next difficulty level.
+  1. Verifies the current game is actually won.
+  2. Calculates the next difficulty.
+  3. Starts a completely new game instance.
+  4. Stops the old game process.
+  """
+  def level_up(current_game_id) do
+    with {:ok, current_state} <- Server.get_client_state(current_game_id),
+         true <- current_state.status == :won,
+         {:ok, next_difficulty} <- Logic.next_difficulty(current_state.difficulty) do
+      user_stub = %{id: current_state.user_id}
+      {:ok, new_game} = start_new_game(user_stub, next_difficulty)
+
+      # The 'won' status was already persisted in make_guess
+      # so we don't need any additional db operation
+      Server.stop(current_game_id)
+
+      {:ok, new_game}
+    else
+      false -> {:error, :game_not_won}
+      {:error, :game_not_found} -> {:error, :game_not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Cleanly ends the current game session.
+  - If the game is :active, it marks it as :abandoned and persists that.
+  - If the game is already :won or :abandoned, it simply stops the process without changing history.
+  """
+  def abandon_game(game_id) do
+    case Server.get_client_state(game_id) do
+      {:ok, state} ->
+        if state.status == :active do
+          Server.abandon_game(game_id)
+
+          game_record = Repo.get!(Game, game_id)
+          update_game(game_record, %{status: :abandoned})
+        end
+
+        Server.stop(game_id)
+
+        {:ok, state}
+
+      {:error, :game_not_found} ->
+        case Repo.get(Game, game_id) do
+          nil ->
+            {:error, :game_not_found}
+
+          %Game{status: :active} = game ->
+            update_game(game, %{status: :abandoned})
+            {:ok, GameDTO.new(game)}
+
+          game ->
+            {:ok, GameDTO.new(game)}
+        end
+    end
+  end
+
+  # --- Gameplay (Guessing) ---
+
+  @doc """
+  Submits a guess to the running game and persists the result.
+  Accepts a map of %{kind => %Choice{}} (from the UI)
+  and converts it to a MapSet for the Server.
+  """
+  def make_guess(game_id, guess_map) do
+    {:ok, game} = get_running_game(game_id)
+
+    # convert UI Map -> domain MapSet
+    guess_set =
+      guess_map
+      |> Map.values()
+      |> MapSet.new()
+
+    Repo.transaction(fn ->
+      with :ok <- Logic.validate_guess(guess_set, game.difficulty),
+           {:ok, new_state} <- Server.guess(game_id, guess_set),
+           {:ok, _guess_record} <- persist_turn_outcome(game_id, new_state) do
+        new_state
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp persist_turn_outcome(game_id, new_state) do
+    # grab the matches from the new state (head of the list is latest)
+    {guess_set, matches} = hd(new_state.guesses)
+
+    guess_attrs = %{
+      game_id: game_id,
+      matches: matches,
+      # MapSet<Struct> -> List<Atom>
+      choices: Enum.map(guess_set, & &1.name)
+    }
+
+    with {:ok, guess_record} <- create_guess(guess_attrs) do
+      # only update Game status if it transitioned (e.g. active -> won)
+      if new_state.status != :active do
+        game_record = Repo.get!(Game, game_id)
+        update_game(game_record, %{status: new_state.status})
+      else
+        {:ok, guess_record}
+      end
+    end
+  end
+
+  # --- State Recovery ---
 
   @doc """
   Gets the game state.
@@ -51,7 +163,6 @@ defmodule Cipher.Games do
     end
   end
 
-  # Private helper to handle the "Cold Boot" logic
   defp restore_game_session(game_id) do
     case get_game_with_history(game_id) do
       nil ->
@@ -59,7 +170,11 @@ defmodule Cipher.Games do
 
       db_record ->
         game_dto = GameDTO.new(db_record)
-        {:ok, _pid} = Server.ensure_started(game_dto)
+
+        if game_dto.status == :active do
+          {:ok, _pid} = Server.ensure_started(game_dto)
+        end
+
         {:ok, GameDTO.client_view(game_dto)}
     end
   end
@@ -76,56 +191,9 @@ defmodule Cipher.Games do
     |> Repo.preload(guesses: from(g in Guess, order_by: [desc: g.inserted_at]))
   end
 
-  @doc """
-  Submits a guess to the running game.
-  Accepts a map of %{kind => %Choice{}} (from the UI)
-  and converts it to a MapSet for the Server.
-  """
-  def make_guess(game_id, guess_map) do
-    {:ok, game} = get_running_game(game_id)
+  # --- Helpers ---
 
-    # convert UI Map -> domain MapSet
-    guess_set =
-      guess_map
-      |> Map.values()
-      |> MapSet.new()
-
-    case Cipher.Games.Logic.validate_guess(guess_set, game.difficulty) do
-      :ok ->
-        Server.guess(game_id, guess_set)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  @doc """
-  Progresses the user to the next difficulty level.
-  1. Checks the current game's settings.
-  2. Calculates the next difficulty.
-  3. Starts a completely new game instance.
-  """
-  def level_up(current_game_id) do
-    current_game = Repo.get!(Cipher.Games.Game, current_game_id)
-
-    case Cipher.Games.Logic.next_difficulty(current_game.difficulty) do
-      {:ok, next_difficulty} ->
-        user_stub = %{id: current_game.user_id}
-        start_new_game(user_stub, next_difficulty)
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  def abandon_game(current_game_id) do
-    db_record = Repo.get!(Cipher.Games.Game, current_game_id)
-    game_state = GameDTO.new(db_record)
-    update_game(db_record, %{status: :abandoned})
-    Server.stop(current_game_id)
-    {:ok, %{game_state | status: :abandoned}}
-  end
-
+  # todo: unsure if this should live here
   def parse_guess_input(params) do
     Enum.reduce_while(params, {:ok, %{}}, fn {kind_str, value_str}, {:ok, acc} ->
       with {:ok, kind_atom} <- Choice.kind_from_string(kind_str),
@@ -137,6 +205,8 @@ defmodule Cipher.Games do
       end
     end)
   end
+
+  # --- CRUD ---
 
   @doc """
   Returns the list of games.
