@@ -67,7 +67,8 @@ defmodule CipherWeb.FallbackController do
     |> json(%{error: "Difficulty must be one of: easy, normal, hard"})
   end
 
-  def call(conn, {:error, reason}) when reason in [:incomplete_guess, :invalid_items] do
+  def call(conn, {:error, reason})
+      when reason in [:incomplete_guess, :invalid_items, :too_many_items] do
     conn
     |> put_status(:unprocessable_entity)
     |> json(%{error: "Guess rejected", reason: Atom.to_string(reason)})

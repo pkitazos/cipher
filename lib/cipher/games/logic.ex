@@ -85,7 +85,8 @@ defmodule Cipher.Games.Logic do
       |> MapSet.new()
 
     cond do
-      MapSet.size(guess_set) != MapSet.size(required_categories) -> {:error, :incomplete_guess}
+      MapSet.size(guess_set) < MapSet.size(required_categories) -> {:error, :incomplete_guess}
+      MapSet.size(guess_set) > MapSet.size(required_categories) -> {:error, :too_many_items}
       guess_kinds != required_categories -> {:error, :invalid_items}
       true -> :ok
     end
