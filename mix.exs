@@ -49,8 +49,8 @@ defmodule Cipher.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:elixir_uuid, "~> 1.2"},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.8", runtime: Mix.env() in [:dev, :sandbox]},
+      {:tailwind, "~> 0.3", runtime: Mix.env() in [:dev, :sandbox]},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -79,6 +79,12 @@ defmodule Cipher.MixProject do
         "tailwind cipher --minify",
         "esbuild cipher --minify",
         "phx.digest"
+      ],
+      playground: [
+        "ecto.drop",
+        "ecto.create",
+        "ecto.migrate",
+        "run priv/repo/playground.exs"
       ]
     ]
   end

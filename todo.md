@@ -134,32 +134,31 @@
 ### Database Schema Design
 
 #### [DB1]
-- [ ] Create `games` table migration
+- [-] Create `games` table migration
   - [x] `id` - UUID (matches GenServer game_id)
   - [x] `user_id` - Reference to users (future auth)
   - [x] `difficulty` - Enum (easy/normal/hard)
   - [x] `status` - Enum (active/won/expired/abandoned/completed)
   - [x] `secret` - Encrypted JSONB (for verification)
   - [x] `guesses` - JSONB array of guess history
-  - [ ] `num_guesses` - Integer (for leaderboards)
-  - [ ] `leveled_up_to` - UUID reference to next game in chain
+  - [-] `num_guesses` - Integer (for leaderboards) 
   - [x] `timestamps` - inserted_at, updated_at
 
 #### [DB2]
 - [x] Create `Games` context module
 
 #### [DB3]
-- [ ] Implement persistence functions
+- [x] Implement persistence functions
   - [x] `get_game/1` - Retrieve by ID
-  - [ ] `list_user_games/1` - Get user's game history
-  - [ ] `leaderboard/1` - Top scores by difficulty
+  - [x] `list_user_games/1` - Get user's game history
+  - [x] `leaderboard/1` - Top scores by difficulty
 
 #### [DB4]
-- [ ] Integrate persistence with lifecycle events
-  - [ ] Persist on timeout (`:expired` status)
-  - [ ] Persist on abandon (`:abandoned` status)
-  - [ ] Persist on level up (`:completed` status)
-  - [ ] Persist on win (`:won` status)
+- [x] Integrate persistence with lifecycle events
+  - [x] Persist on timeout (`:expired` status)
+  - [x] Persist on abandon (`:abandoned` status)
+  - [x] Persist on level up (`:won` status)
+  - [x] Persist on win (`:won` status)
 
 ---
 
@@ -220,3 +219,9 @@
 
 #### [T6]
 - [ ] Add proper validation for difficulty parameter in all functions
+
+## Test scripts
+
+- [x] disable Ecto logging in playground output
+- [x] create version of the script that can be run to preload some configuration into iex
+- [x] quick way to nuke db and seed data for consistent testing
