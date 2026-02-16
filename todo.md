@@ -28,19 +28,20 @@
 - [x] Build category selector component
 - [x] Handle selection events and track current guess
 - [x] Submit guess to Games.Server
-- [ ] **Handle win state UI feedback**
-  - [ ] Show congratulations message when game is won
-  - [x] Disable guess submission after win
+- [x] **Handle win state UI feedback**
+  - [x] Show congratulations message when game is won (via Flash)
+  - [x] Disable guess submission after win (choice buttons disabled)
   - [x] Show "New Game" and "Level Up" buttons when won
 - [ ] **Implement "New Game" functionality**
-  - [ ] Add "New Game" button (visible always)
-  - [x] Handle "new_game" event in GameLive
+  - [x] Add "New Game" button (visible when not active)
+  - [ ] Handle "new_game" event in GameLive (currently using href link)
+        make this a button which abandons the current game, and then pushes the "/" route
   - [ ] Call `Games.Server.abandon_game/1` to clean up current game process
-  - [x] Navigate to "/" (DifficultyLive) using `push_navigate/2`
-- [ ] **Implement "Level Up" functionality**
+  - [x] Navigate to "/" (DifficultyLive)
+- [x] **Implement "Level Up" functionality**
   - [x] Add "Level Up" button (only visible when game is won, not at max difficulty)
   - [x] Handle "level_up" event in GameLive
-  - [x] Call `Games.Server.level_up/1` to create new game at next difficulty
+  - [x] Call `Games.level_up/1` to create new game at next difficulty
   - [x] Navigate to "/game/:new_game_id" using `push_navigate/2`
   - [ ] Show appropriate error if player hasn't won yet
   - [ ] Show appropriate message if already at max difficulty
@@ -209,16 +210,13 @@
 - [x] Change `guess/2` return type from `{:correct, n} | {:incorrect, n}` to `{:ok, state}`
 
 #### [T3]
-- [ ] Add proper logging for all lifecycle events
+- [ ] Add proper logging for all lifecycle events (should be possible to see a game by filtering the logs by game id)
 
 #### [T4]
 - [ ] Add telemetry events for game lifecycle
 
 #### [T5]
-- [ ] Consider adding game creation timestamp to state
+- [x] Consider adding game creation timestamp to state (exists in db)
 
 #### [T6]
 - [ ] Add proper validation for difficulty parameter in all functions
-
-#### [T7]
-- [ ] Add script that checks all `choices` are in sync across all the files hey are used in

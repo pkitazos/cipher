@@ -24,6 +24,9 @@ defmodule Cipher.Games.Choice do
   @direction_order [:top, :bottom, :left, :right]
   @size_order [:tiny, :small, :medium, :large]
 
+  @valid_kinds [:shape, :colour, :pattern, :direction, :size]
+  @valid_names @shape_order ++ @colour_order ++ @pattern_order ++ @direction_order ++ @size_order
+
   def values do
     @shape_order ++ @colour_order ++ @pattern_order ++ @direction_order ++ @size_order
   end
@@ -43,6 +46,37 @@ defmodule Cipher.Games.Choice do
   def from_name(name) when name in @size_order, do: %__MODULE__{kind: :size, name: name}
 
   def from_name(name), do: raise("Unknown choice name: #{inspect(name)}")
+
+  @doc """
+  Safely converts a string kind (e.g. "colour") to its atom.
+  """
+  @spec kind_from_string(String.t()) :: {:ok, kind()} | :error
+
+  for kind_atom <- @valid_kinds do
+    kind_str = Atom.to_string(kind_atom)
+
+    def kind_from_string(unquote(kind_str)), do: {:ok, unquote(kind_atom)}
+  end
+
+  def kind_from_string(_), do: :error
+
+  @doc """
+  Safely converts a string to a Choice struct.
+  Generated at compile-time: No try/rescue, no atom exhaustion risk.
+  """
+  @spec from_string(String.t()) :: {:ok, t()} | :error
+
+  # Freak compile-time function generation.
+  # Loop through the list and generate a function head for each valid string.
+  for atom_name <- @valid_names do
+    str_name = Atom.to_string(atom_name)
+
+    def from_string(unquote(str_name)) do
+      {:ok, from_name(unquote(atom_name))}
+    end
+  end
+
+  def from_string(_), do: :error
 
   @spec show(t()) :: String.t()
   def show(%Choice{name: :circle}), do: "O"

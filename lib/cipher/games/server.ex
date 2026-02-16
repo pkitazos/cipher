@@ -147,9 +147,9 @@ defmodule Cipher.Games.Server do
 
   @impl true
   def handle_info(:timeout, state) do
-    Logger.info("[#{state.id}] Idle timeout, marking as expired")
-    expired_state = %{state | status: :expired}
-    {:noreply, expired_state}
+    Logger.info("[#{state.id}] Idle timeout, marking as abandoned")
+    abandoned_state = %{state | status: :abandoned}
+    {:noreply, abandoned_state}
   end
 
   @impl true

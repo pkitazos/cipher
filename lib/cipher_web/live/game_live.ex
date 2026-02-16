@@ -67,6 +67,17 @@ defmodule CipherWeb.GameLive do
     end
   end
 
+  def handle_event("new_game", _params, socket) do
+    {:ok, _} = Games.abandon_game(socket.assigns.game.id)
+
+    socket =
+      socket
+      |> put_flash(:info, "Leaving current game...")
+      |> push_navigate(to: ~p"/")
+
+    {:noreply, socket}
+  end
+
   # Note: defp works fine in .heex if it's in the same module
   defp sort_guess(guess_set) do
     guess_set

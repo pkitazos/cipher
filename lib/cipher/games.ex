@@ -6,7 +6,7 @@ defmodule Cipher.Games do
   import Ecto.Query, warn: false
   alias Cipher.Repo
   alias Cipher.Game, as: GameDTO
-  alias Cipher.Games.{Game, Guess, Logic, Server}
+  alias Cipher.Games.{Game, Guess, Logic, Server, Choice}
 
   @doc """
   Orchestrates creating a game.
@@ -116,6 +116,26 @@ defmodule Cipher.Games do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  def abandon_game(current_game_id) do
+    db_record = Repo.get!(Cipher.Games.Game, current_game_id)
+    game_state = GameDTO.new(db_record)
+    update_game(db_record, %{status: :abandoned})
+    Server.stop(current_game_id)
+    {:ok, %{game_state | status: :abandoned}}
+  end
+
+  def parse_guess_input(params) do
+    Enum.reduce_while(params, {:ok, %{}}, fn {kind_str, value_str}, {:ok, acc} ->
+      with {:ok, kind_atom} <- Choice.kind_from_string(kind_str),
+           {:ok, choice_struct} <- Choice.from_string(value_str),
+           true <- choice_struct.kind == kind_atom do
+        {:cont, {:ok, Map.put(acc, kind_atom, choice_struct)}}
+      else
+        _ -> {:halt, {:error, :invalid_parameters}}
+      end
+    end)
   end
 
   @doc """

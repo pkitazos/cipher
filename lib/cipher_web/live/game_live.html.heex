@@ -4,14 +4,13 @@
   </div>
 
   <div :if={@game} class="flex flex-row gap-5">
-    <a
+    <.button
       :if={@game.status != :active}
-      href="/"
-      class="rounded-lg px-4 py-2 text-sm font-semibold bg-black text-white hover:bg-zinc-950/70"
+      phx-click="new_game"
+      class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
     >
       New Game
-    </a>
-
+    </.button>
     <.button
       :if={@game.status == :won}
       disabled={@game.difficulty == :hard}
