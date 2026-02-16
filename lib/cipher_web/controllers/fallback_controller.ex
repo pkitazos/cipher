@@ -7,12 +7,6 @@ defmodule CipherWeb.FallbackController do
     |> json(%{error: "Resource not found"})
   end
 
-  def call(conn, {:error, :invalid_params}) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "Invalid parameters"})
-  end
-
   def call(conn, {:error, :game_not_found}) do
     conn
     |> put_status(:not_found)
@@ -25,10 +19,16 @@ defmodule CipherWeb.FallbackController do
     |> json(%{error: "Game already completed", status: "won"})
   end
 
-  def call(conn, {:error, {:game_not_active, :expired}}) do
+  def call(conn, {:error, {:game_not_active, :abandoned}}) do
     conn
     |> put_status(:gone)
-    |> json(%{error: "Game has expired", status: "expired"})
+    |> json(%{error: "Game was abandoned", status: "abandoned"})
+  end
+
+  def call(conn, {:error, :invalid_params}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Invalid parameters"})
   end
 
   def call(conn, {:error, {:invalid_choice, kind, value}}) do
@@ -53,6 +53,24 @@ defmodule CipherWeb.FallbackController do
     conn
     |> put_status(:bad_request)
     |> json(%{error: "Already at maximum difficulty"})
+  end
+
+  def call(conn, {:error, :invalid_parameters}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Invalid parameter format. Check that your choices match the known list."})
+  end
+
+  def call(conn, {:error, :invalid_difficulty}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Difficulty must be one of: easy, normal, hard"})
+  end
+
+  def call(conn, {:error, reason}) when reason in [:incomplete_guess, :invalid_items] do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Guess rejected", reason: Atom.to_string(reason)})
   end
 
   # Catch-all for unexpected errors

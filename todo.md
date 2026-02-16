@@ -70,7 +70,7 @@
 - [ ] Add `abandon_game/1` function to `Games.Server`
   - [x] Look up game process by ID
   - [x] Call `:mark_abandoned` handler to update status
-  - [ ] Stop the process gracefully with `GenServer.stop(pid, :normal)`
+  - [x] Stop the process gracefully with `GenServer.stop(pid, :normal)`
   - [ ] Return `{:ok, abandoned_state}` for DB persistence
   - [ ] Handle `:game_not_found` error case
 - [x] Add `:mark_abandoned` GenServer handler

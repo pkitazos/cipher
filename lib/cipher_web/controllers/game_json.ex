@@ -1,30 +1,33 @@
 defmodule CipherWeb.GameJSON do
+  alias Cipher.Game
   alias Cipher.Games.Choice
 
-  # For creating a game: POST /api/games
-  def show(%{game_id: id}) do
-    %{id: id, history: []}
+  @doc """
+  Renders a single game.
+  """
+  def show(%{game: game}) do
+    %{data: data(game)}
   end
 
-  # For getting game state: GET /api/games/:id
-  def show(%{game: game}) do
+  defp data(%Game{} = game) do
     %{
       id: game.id,
       difficulty: Atom.to_string(game.difficulty),
       status: Atom.to_string(game.status),
-      history:
-        Enum.map(game.guesses, fn {guess_mapset, matches} ->
-          %{guesses: Choice.guess_to_map(guess_mapset), matches: matches}
-        end)
+      user_id: game.user_id,
+      history: Enum.map(game.guesses, &transform_guess/1),
+      last_matches: game.last_matches
     }
   end
 
-  # For submitting a guess: POST /api/games/:id/guess
-  def guess_result(%{result: {:correct, matches}}) do
-    %{result: "correct", matches: matches}
-  end
-
-  def guess_result(%{result: {:incorrect, matches}}) do
-    %{result: "incorrect", matches: matches}
+  # Convert MapSet<Struct> -> List of Objects
+  defp transform_guess({guess_mapset, matches}) do
+    %{
+      matches: matches,
+      choices:
+        guess_mapset
+        |> Choice.guess_to_map()
+        |> Enum.into(%{}, fn {k, v} -> {k, Atom.to_string(v)} end)
+    }
   end
 end
