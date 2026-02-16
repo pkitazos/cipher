@@ -4,6 +4,10 @@ defmodule Cipher.Game do
   Decoupled from the database schema.
   """
 
+  alias Cipher.Guess
+  alias Cipher.Games.Choice
+  alias Cipher.Games.Game, as: DBGame
+
   defstruct [
     :id,
     :user_id,
@@ -11,6 +15,7 @@ defmodule Cipher.Game do
     :status,
     :secret,
     :guesses,
+    :num_guesses,
     :last_matches
   ]
 
@@ -24,83 +29,47 @@ defmodule Cipher.Game do
           difficulty: difficulty(),
           status: status(),
           secret: MapSet.t(Choice.t()),
-          guesses: list(guess_entry()),
+          guesses: list(Guess.t()),
+          num_guesses: integer(),
           last_matches: integer() | nil
         }
-
-  alias Cipher.Games.Game, as: DBGame
-
-  @doc """
-  Converts a Database Schema struct into a Domain Entity.
-  """
-  def from_db(%DBGame{} = db_game) do
-    %__MODULE__{
-      id: db_game.id,
-      user_id: db_game.user_id,
-      difficulty: db_game.difficulty,
-      status: db_game.status,
-      secret: MapSet.new(db_game.secret),
-      guesses: [],
-      last_matches: nil
-    }
-  end
 
   def client_view(%__MODULE__{} = game) do
     %{game | secret: MapSet.new()}
   end
 
-  alias Cipher.Games.Game, as: DBGame
-  alias Cipher.Games.Guess, as: DBGuess
+  @doc """
+  Converts a Database Schema struct into a Domain Entity.
+  Enforces that the 'guesses' association MUST be loaded in the db_game.
+  """
+  def new(%DBGame{guesses: guesses} = db_game) when is_list(guesses) do
+    # sort descending by inserted_at so the latest guess is first
+    domain_guesses =
+      guesses
+      |> Enum.sort_by(& &1.inserted_at, {:desc, Date})
+      |> Enum.map(&Guess.new/1)
 
-  def new(%DBGame{} = db_game) do
-    guesses_runtime =
-      if Ecto.assoc_loaded?(db_game.guesses) do
-        db_game.guesses
-        |> Enum.sort_by(& &1.inserted_at, {:desc, Date})
-        |> Enum.map(fn guess ->
-          parsed_choices =
-            guess.choices
-            |> Enum.map(&to_atom/1)
-            |> Enum.map(&Cipher.Games.Choice.from_name/1)
-            |> MapSet.new()
+    # List<Atom> -> MapSet<%Choice{}>
+    domain_secret =
+      db_game.secret
+      |> Enum.map(&Choice.from_name/1)
+      |> MapSet.new()
 
-          {parsed_choices, guess.matches}
-        end)
-      else
-        []
-      end
-
-    last_matches =
-      case guesses_runtime do
-        [{_guess, matches} | _] -> matches
+    last_matches_val =
+      case domain_guesses do
+        [latest | _] -> latest.matches
         [] -> nil
       end
-
-    secret =
-      db_game.secret
-      |> Enum.map(&Cipher.Games.Choice.from_name/1)
-      |> MapSet.new()
 
     %__MODULE__{
       id: db_game.id,
       user_id: db_game.user_id,
       difficulty: db_game.difficulty,
       status: db_game.status,
-      secret: secret,
-      guesses: guesses_runtime,
-      last_matches: last_matches
+      secret: domain_secret,
+      guesses: domain_guesses,
+      num_guesses: db_game.num_guesses || length(domain_guesses),
+      last_matches: last_matches_val
     }
   end
-
-  defp convert_guess(%DBGuess{} = guess) do
-    parsed_choices =
-      guess.choices
-      |> Enum.map(&to_atom/1)
-      |> MapSet.new()
-
-    {parsed_choices, guess.matches}
-  end
-
-  defp to_atom(v) when is_atom(v), do: v
-  defp to_atom(v) when is_binary(v), do: String.to_existing_atom(v)
 end

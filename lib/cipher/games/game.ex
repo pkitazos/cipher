@@ -9,6 +9,7 @@ defmodule Cipher.Games.Game do
     field(:status, Ecto.Enum, values: [:won, :active, :abandoned], default: :active)
     field(:difficulty, Ecto.Enum, values: [:easy, :normal, :hard])
     field(:secret, {:array, Ecto.Enum}, values: Cipher.Games.Choice.values())
+    field(:num_guesses, :integer, virtual: true)
 
     belongs_to(:user, User)
 

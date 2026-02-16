@@ -30,7 +30,7 @@ defmodule Cipher.Games do
     # if the Server fails to start.
     Cipher.Repo.transaction(fn ->
       with {:ok, db_record} <- create_game(attrs),
-           game_dto <- GameDTO.new(db_record),
+           game_dto <- GameDTO.new(%{db_record | guesses: []}),
            {:ok, _pid} <- Server.ensure_started(game_dto) do
         game_dto
       else
@@ -91,12 +91,20 @@ defmodule Cipher.Games do
           nil ->
             {:error, :game_not_found}
 
-          %Game{status: :active} = game ->
-            update_game(game, %{status: :abandoned})
-            {:ok, GameDTO.new(game)}
+          %Game{status: status} = game ->
+            game =
+              if status == :active do
+                {:ok, updated} = update_game(game, %{status: :abandoned})
+                updated
+              else
+                game
+              end
 
-          game ->
-            {:ok, GameDTO.new(game)}
+            # Preload before DTO conversion
+            game_with_history =
+              Repo.preload(game, guesses: from(g in Guess, order_by: [desc: g.inserted_at]))
+
+            {:ok, GameDTO.new(game_with_history)}
         end
     end
   end
@@ -148,6 +156,61 @@ defmodule Cipher.Games do
         {:ok, guess_record}
       end
     end
+  end
+
+  # --- History & Leaderboard ---
+
+  @doc """
+  Returns the game history for a specific user, ordered by newest first.
+  Includes the guess count.
+  """
+  def list_user_games(user_id) do
+    from(g in Game,
+      where: g.user_id == ^user_id,
+      left_join: guesses in assoc(g, :guesses),
+      group_by: g.id,
+      # merge the count into the virtual field
+      # we count the ID of the joined table 'guesses', not 'g.guesses'
+      select_merge: %{num_guesses: count(guesses.id)},
+      order_by: [desc: g.inserted_at],
+      preload: [guesses: ^from(g in Guess, order_by: [desc: g.inserted_at])]
+    )
+    |> Repo.all()
+    |> Enum.map(&GameDTO.new/1)
+  end
+
+  @doc """
+  Returns the top n (default: 10) won games for a specific difficulty.
+  Ordered by:
+  1. Fewest Guesses
+  2. Shortest Duration - calculated as (updated_at - inserted_at)
+  """
+  def leaderboard(difficulty, limit \\ 10) do
+    # find the top games
+    top_ids =
+      from(g in Game,
+        where: g.status == :won and g.difficulty == ^difficulty,
+        left_join: guesses in assoc(g, :guesses),
+        group_by: g.id,
+        order_by: [
+          asc: count(guesses.id),
+          asc: fragment("? - ?", g.updated_at, g.inserted_at)
+        ],
+        limit: ^limit,
+        select: g.id
+      )
+      |> Repo.all()
+
+    # fetch full data for games to construct corerct DTO
+    from(g in Game,
+      where: g.id in ^top_ids,
+      preload: [guesses: ^from(g in Guess, order_by: [desc: g.inserted_at])],
+      # maintain the leaderboard order using `array_position`
+      # Postgres-specific so we need to escape to SQL for this
+      order_by: [asc: fragment("array_position(?, ?)", ^top_ids, g.id)]
+    )
+    |> Repo.all()
+    |> Enum.map(&GameDTO.new/1)
   end
 
   # --- State Recovery ---
