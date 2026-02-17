@@ -1,44 +1,46 @@
-<div class="max-w-md mx-auto text-center flex flex-col gap-8 justify-center items-center">
-  <h1 class="text-3xl font-bold mb-8">Cipher</h1>
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-md mx-auto text-center flex flex-col gap-8 justify-center items-center">
+    <h1 class="text-3xl font-bold mb-8">Cipher</h1>
 
-  <div class="flex flex-row gap-2">
+    <div class="flex flex-row gap-2">
+      <.button
+        phx-click="set_difficulty"
+        phx-value-difficulty="easy"
+        class={[
+          "w-24 text-white cursor-pointer",
+          if(@difficulty == :easy, do: "bg-violet-800", else: "bg-zinc-700")
+        ]}
+      >
+        easy
+      </.button>
+      <.button
+        phx-click="set_difficulty"
+        phx-value-difficulty="normal"
+        class={[
+          "w-24 text-white cursor-pointer",
+          if(@difficulty == :normal, do: "bg-violet-800", else: "bg-zinc-700")
+        ]}
+      >
+        normal
+      </.button>
+      <.button
+        phx-click="set_difficulty"
+        phx-value-difficulty="hard"
+        class={[
+          "w-24 text-white cursor-pointer",
+          if(@difficulty == :hard, do: "bg-violet-800", else: "bg-zinc-700")
+        ]}
+      >
+        hard
+      </.button>
+    </div>
+
     <.button
-      phx-click="set_difficulty"
-      phx-value-difficulty="easy"
-      class={[
-        "w-24 text-white cursor-pointer",
-        if(@difficulty == :easy, do: "bg-violet-800", else: "bg-zinc-700")
-      ]}
+      disabled={@difficulty == nil}
+      phx-click="start_game"
+      class="w-76 bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed disabled:hover:bg-zinc-600 cursor-pointer"
     >
-      easy
-    </.button>
-    <.button
-      phx-click="set_difficulty"
-      phx-value-difficulty="normal"
-      class={[
-        "w-24 text-white cursor-pointer",
-        if(@difficulty == :normal, do: "bg-violet-800", else: "bg-zinc-700")
-      ]}
-    >
-      normal
-    </.button>
-    <.button
-      phx-click="set_difficulty"
-      phx-value-difficulty="hard"
-      class={[
-        "w-24 text-white cursor-pointer",
-        if(@difficulty == :hard, do: "bg-violet-800", else: "bg-zinc-700")
-      ]}
-    >
-      hard
+      Start Game
     </.button>
   </div>
-
-  <.button
-    disabled={@difficulty == nil}
-    phx-click="start_game"
-    class="w-76 bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed disabled:hover:bg-zinc-600 cursor-pointer"
-  >
-    Start Game
-  </.button>
-</div>
+</Layouts.app>

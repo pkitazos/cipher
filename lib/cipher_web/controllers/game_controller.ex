@@ -1,7 +1,6 @@
 defmodule CipherWeb.GameController do
   use CipherWeb, :controller
 
-  alias Cipher.Accounts
   alias Cipher.Games
 
   action_fallback CipherWeb.FallbackController
@@ -9,8 +8,8 @@ defmodule CipherWeb.GameController do
   # POST /api/games
   def create(conn, params) do
     with {:ok, difficulty} <- validate_difficulty(params["difficulty"]),
-         {:ok, user} <- Accounts.create_guest_user(),
-         {:ok, game} <- Games.start_new_game(user, difficulty) do
+         session_id = params["session_id"] || Ecto.UUID.generate(),
+         {:ok, game} <- Games.start_new_game(session_id, difficulty) do
       conn
       |> put_status(:created)
       |> render(:show, game: game)

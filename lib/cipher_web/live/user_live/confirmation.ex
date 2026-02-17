@@ -1,6 +1,7 @@
 defmodule CipherWeb.UserLive.Confirmation do
   use CipherWeb, :live_view
 
+  alias CipherWeb.Layouts
   alias Cipher.Accounts
 
   @impl true

@@ -1,6 +1,7 @@
 defmodule CipherWeb.UserLive.Registration do
   use CipherWeb, :live_view
 
+  alias CipherWeb.Layouts
   alias Cipher.Accounts
   alias Cipher.Accounts.User
 
@@ -47,29 +48,36 @@ defmodule CipherWeb.UserLive.Registration do
     {:ok, redirect(socket, to: CipherWeb.UserAuth.signed_in_path(socket))}
   end
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     changeset = Accounts.change_user_email(%User{}, %{}, validate_unique: false)
 
-    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
+    socket =
+      socket
+      |> assign(guest_session_id: session["guest_session_id"])
+      |> assign_form(changeset)
+
+    {:ok, socket, temporary_assigns: [form: nil]}
   end
 
   @impl true
   def handle_event("save", %{"user" => user_params}, socket) do
     case Accounts.register_user(user_params) do
       {:ok, user} ->
-        {:ok, _} =
-          Accounts.deliver_login_instructions(
-            user,
-            &url(~p"/users/log-in/#{&1}")
-          )
+        if guest_id = socket.assigns.guest_session_id do
+          Cipher.Games.claim_guest_games(guest_id, user.id)
+        end
 
-        {:noreply,
-         socket
-         |> put_flash(
-           :info,
-           "An email was sent to #{user.email}, please access it to confirm your account."
-         )
-         |> push_navigate(to: ~p"/users/log-in")}
+        {:ok, _} = Accounts.deliver_login_instructions(user, &url(~p"/users/log-in/#{&1}"))
+
+        socket =
+          socket
+          |> put_flash(
+            :info,
+            "An email was sent to #{user.email}, please access it to confirm your account."
+          )
+          |> push_navigate(to: ~p"/users/log-in")
+
+        {:noreply, socket}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}

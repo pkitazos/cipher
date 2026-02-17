@@ -11,6 +11,7 @@ defmodule Cipher.Game do
   defstruct [
     :id,
     :user_id,
+    :session_id,
     :difficulty,
     :status,
     :secret,
@@ -26,6 +27,7 @@ defmodule Cipher.Game do
   @type t :: %__MODULE__{
           id: integer(),
           user_id: integer(),
+          session_id: String.t() | nil,
           difficulty: difficulty(),
           status: status(),
           secret: MapSet.t(Choice.t()),
@@ -64,6 +66,7 @@ defmodule Cipher.Game do
     %__MODULE__{
       id: db_game.id,
       user_id: db_game.user_id,
+      session_id: db_game.session_id,
       difficulty: db_game.difficulty,
       status: db_game.status,
       secret: domain_secret,

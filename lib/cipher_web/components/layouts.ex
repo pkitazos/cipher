@@ -4,7 +4,18 @@ defmodule CipherWeb.Layouts do
   embed_templates "layouts/*"
 
   attr :flash, :map, required: true
+  attr :current_scope, :map, default: nil
+  slot :inner_block
   attr :id, :string, default: "flash-group"
+
+  def app(assigns) do
+    ~H"""
+    <main class="container mx-auto px-4 py-8">
+      <.flash_group flash={@flash} id="flash-group" />
+      {render_slot(@inner_block)}
+    </main>
+    """
+  end
 
   def flash_group(assigns) do
     ~H"""

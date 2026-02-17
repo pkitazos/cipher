@@ -1,85 +1,87 @@
-<div class="flex flex-col justify-center items-center gap-4">
-  <div :if={@game}>
-    <GameComponents.game_status_card game={@game} />
-  </div>
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="flex flex-col justify-center items-center gap-4">
+    <div :if={@game}>
+      <GameComponents.game_status_card game={@game} />
+    </div>
 
-  <div :if={@game} class="flex flex-row gap-5">
-    <%!--
+    <div :if={@game} class="flex flex-row gap-5">
+      <%!--
     according to our new event handler implementation this button is meant to be visible at all times
     if a user pressed the "New Game" button in the middle of an existing game, the current game becomes `abandoned`
     --%>
-    <.button
-      :if={@game.status != :active}
-      phx-click="new_game"
-      class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
-    >
-      New Game
-    </.button>
-    <.button
-      :if={@game.status == :won}
-      disabled={@game.difficulty == :hard}
-      phx-click="level_up"
-      class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
-    >
-      Level Up
-    </.button>
-  </div>
-
-  <div :if={@game} class="flex flex-col gap-2 items-center">
-    <h2 class="text-xl font-semibold">History</h2>
-    <p :if={@game.guesses == []} class="text-zinc-500 text-sm">No guesses yet</p>
-
-    <div
-      :for={{guess_set, matches} <- Enum.reverse(@game.guesses)}
-      class="flex flex-row gap-2"
-    >
-      <div
-        :for={choice_struct <- sort_guess(guess_set)}
-        class="grid place-items-center size-10 rounded-md bg-slate-800 text-white"
+      <.button
+        :if={@game.status != :active}
+        phx-click="new_game"
+        class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
       >
-        {Choice.show(choice_struct)}
-      </div>
-      <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
-        {matches}
-      </div>
+        New Game
+      </.button>
+      <.button
+        :if={@game.status == :won}
+        disabled={@game.difficulty == :hard}
+        phx-click="level_up"
+        class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
+      >
+        Level Up
+      </.button>
     </div>
-  </div>
 
-  <div :if={@game} class="flex flex-col gap-2">
-    <div class="flex flex-row gap-2">
+    <div :if={@game} class="flex flex-col gap-2 items-center">
+      <h2 class="text-xl font-semibold">History</h2>
+      <p :if={@game.guesses == []} class="text-zinc-500 text-sm">No guesses yet</p>
+
       <div
-        :for={kind <- Logic.get_active_categories(@game.difficulty)}
-        class="flex flex-col gap-2"
+        :for={{guess_set, matches} <- Enum.reverse(@game.guesses)}
+        class="flex flex-row gap-2"
       >
-        <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
-          {if(@guess[kind], do: Choice.show(@guess[kind]))}
-        </div>
-
-        <button
-          :for={choice_struct <- Logic.get_choices_for_category(kind)}
-          disabled={@game.status != :active}
-          phx-click="select_choice"
-          phx-value-kind={kind}
-          phx-value-choice={choice_struct.name}
-          class={[
-            "grid place-items-center size-10 rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed",
-            if(@guess[kind] && @guess[kind].name == choice_struct.name,
-              do: "bg-blue-600 text-white",
-              else: "bg-slate-800 text-zinc-400 hover:bg-slate-600"
-            )
-          ]}
+        <div
+          :for={choice_struct <- sort_guess(guess_set)}
+          class="grid place-items-center size-10 rounded-md bg-slate-800 text-white"
         >
           {Choice.show(choice_struct)}
-        </button>
+        </div>
+        <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
+          {matches}
+        </div>
       </div>
     </div>
 
-    <.button
-      disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty))}
-      phx-click="make_guess"
-      class="bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed mt-4 w-full cursor-pointer"
-    >
-      Submit Guess
-    </.button>
+    <div :if={@game} class="flex flex-col gap-2">
+      <div class="flex flex-row gap-2">
+        <div
+          :for={kind <- Logic.get_active_categories(@game.difficulty)}
+          class="flex flex-col gap-2"
+        >
+          <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
+            {if(@guess[kind], do: Choice.show(@guess[kind]))}
+          </div>
+
+          <button
+            :for={choice_struct <- Logic.get_choices_for_category(kind)}
+            disabled={@game.status != :active}
+            phx-click="select_choice"
+            phx-value-kind={kind}
+            phx-value-choice={choice_struct.name}
+            class={[
+              "grid place-items-center size-10 rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed",
+              if(@guess[kind] && @guess[kind].name == choice_struct.name,
+                do: "bg-blue-600 text-white",
+                else: "bg-slate-800 text-zinc-400 hover:bg-slate-600"
+              )
+            ]}
+          >
+            {Choice.show(choice_struct)}
+          </button>
+        </div>
+      </div>
+
+      <.button
+        disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty))}
+        phx-click="make_guess"
+        class="bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed mt-4 w-full cursor-pointer"
+      >
+        Submit Guess
+      </.button>
+    </div>
   </div>
-</div>
+</Layouts.app>

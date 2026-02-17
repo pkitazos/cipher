@@ -59,6 +59,7 @@ defmodule Cipher.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:phoenix_ecto, "~> 4.6"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:swoosh, "~> 1.4"}
@@ -81,6 +82,11 @@ defmodule Cipher.MixProject do
         "tailwind cipher --minify",
         "esbuild cipher --minify",
         "phx.digest"
+      ],
+      "ecto.reset": [
+        "ecto.drop",
+        "ecto.create",
+        "ecto.migrate"
       ],
       playground: [
         "ecto.drop",

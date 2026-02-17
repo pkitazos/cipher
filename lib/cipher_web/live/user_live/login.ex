@@ -1,6 +1,7 @@
 defmodule CipherWeb.UserLive.Login do
   use CipherWeb, :live_view
 
+  alias CipherWeb.Layouts
   alias Cipher.Accounts
 
   @impl true

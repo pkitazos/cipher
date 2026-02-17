@@ -3,6 +3,7 @@ defmodule CipherWeb.UserLive.Settings do
 
   on_mount {CipherWeb.UserAuth, :require_sudo_mode}
 
+  alias CipherWeb.Layouts
   alias Cipher.Accounts
 
   @impl true

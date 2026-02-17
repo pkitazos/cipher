@@ -8,6 +8,7 @@ defmodule CipherWeb.Router do
     plug :accepts, ["html"]
     # loads the session from the cookie
     plug :fetch_session
+    plug CipherWeb.Plugs.GuestSession
     # enables flash messages in LiveView
     plug :fetch_live_flash
     # sets the root layout to wrap all pages
@@ -26,9 +27,11 @@ defmodule CipherWeb.Router do
   scope "/", CipherWeb do
     pipe_through :browser
 
-    # a bit unclear about what the actions are for since this isn't a REST API
-    live "/", DifficultyLive, :index
-    live "/game/:game_id", GameLive, :show
+    live_session :default,
+      on_mount: [{CipherWeb.UserAuth, :mount_current_scope}] do
+      live "/", DifficultyLive, :index
+      live "/game/:game_id", GameLive, :show
+    end
   end
 
   scope "/api", CipherWeb do
@@ -66,5 +69,12 @@ defmodule CipherWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+  end
+
+  if Application.compile_env(:cipher, :dev_routes) do
+    scope "/dev" do
+      pipe_through :browser
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
   end
 end

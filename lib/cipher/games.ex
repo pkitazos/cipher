@@ -16,15 +16,16 @@ defmodule Cipher.Games do
   2. Saves to DB (Repo)
   3. Starts GenServer (Server)
   """
-  def start_new_game(user, difficulty) do
+  def start_new_game(identifier, difficulty) do
     secret_structs = Logic.initialise_secret(difficulty)
     Logger.info("[new game] secret: #{inspect(secret_structs)}")
 
-    attrs = %{
-      user_id: user.id,
-      difficulty: difficulty,
-      secret: Enum.map(secret_structs, & &1.name)
-    }
+    attrs =
+      case identifier do
+        %{id: user_id} -> %{user_id: user_id, difficulty: difficulty}
+        session_id when is_binary(session_id) -> %{session_id: session_id, difficulty: difficulty}
+      end
+      |> Map.put(:secret, Enum.map(secret_structs, & &1.name))
 
     # We use Repo.transaction to ensure we don't create a DB record
     # if the Server fails to start.
@@ -52,8 +53,14 @@ defmodule Cipher.Games do
     with {:ok, current_state} <- Server.get_client_state(current_game_id),
          true <- current_state.status == :won,
          {:ok, next_difficulty} <- Logic.next_difficulty(current_state.difficulty) do
-      user_stub = %{id: current_state.user_id}
-      {:ok, new_game} = start_new_game(user_stub, next_difficulty)
+      identifier =
+        if current_state.user_id do
+          %{id: current_state.user_id}
+        else
+          current_state.session_id
+        end
+
+      {:ok, new_game} = start_new_game(identifier, next_difficulty)
 
       # The 'won' status was already persisted in make_guess
       # so we don't need any additional db operation
@@ -159,6 +166,17 @@ defmodule Cipher.Games do
   end
 
   # --- History & Leaderboard ---
+
+  @doc """
+  Claims all games associated with a session_id by assigning them to a user.
+  Used when a guest user registers an account.
+  """
+  def claim_guest_games(session_id, user_id) do
+    from(g in Game,
+      where: g.session_id == ^session_id and is_nil(g.user_id)
+    )
+    |> Repo.update_all(set: [user_id: user_id])
+  end
 
   @doc """
   Returns the game history for a specific user, ordered by newest first.

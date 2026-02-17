@@ -1,16 +1,18 @@
 defmodule CipherWeb.DifficultyLive do
   use CipherWeb, :live_view
 
-  alias Cipher.Accounts
+  alias CipherWeb.Layouts
+
   alias Cipher.Games
 
   # This is called when the LiveView loads.
   # We initialize with `game_id: nil`
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     socket =
       socket
       |> assign(game: nil)
       |> assign(difficulty: nil)
+      |> assign(session_id: session["guest_session_id"])
 
     {:ok, socket}
   end
@@ -18,9 +20,13 @@ defmodule CipherWeb.DifficultyLive do
   def handle_event("start_game", _params, socket) do
     difficulty = socket.assigns.difficulty
 
-    {:ok, user} = Accounts.create_guest_user()
+    identifier =
+      case socket.assigns[:current_scope] do
+        %{user: user} -> user
+        _ -> socket.assigns.session_id
+      end
 
-    case Games.start_new_game(user, difficulty) do
+    case Games.start_new_game(identifier, difficulty) do
       {:ok, game} ->
         {:noreply, push_navigate(socket, to: ~p"/game/#{game.id}")}
 

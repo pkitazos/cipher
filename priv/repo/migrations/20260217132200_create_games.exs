@@ -6,7 +6,7 @@ defmodule Cipher.Repo.Migrations.CreateGames do
       add(:status, :string)
       add(:difficulty, :string)
       add(:secret, {:array, :string})
-      add(:user_id, references(:users, on_delete: :delete_all), null: false)
+      add(:user_id, references(:users, on_delete: :delete_all), null: true)
       add(:session_id, :string)
 
       timestamps(type: :utc_datetime)

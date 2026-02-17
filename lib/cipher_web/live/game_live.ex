@@ -1,6 +1,7 @@
 defmodule CipherWeb.GameLive do
   use CipherWeb, :live_view
 
+  alias CipherWeb.Layouts
   alias CipherWeb.GameComponents
 
   alias Cipher.Games
