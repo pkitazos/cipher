@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :cipher, :scopes,
+  user: [
+    default: true,
+    module: Cipher.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: Cipher.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :cipher,
   generators: [timestamp_type: :utc_datetime],
   ecto_repos: [Cipher.Repo]
@@ -29,6 +42,8 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+config :cipher, Cipher.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild
 config :esbuild,
