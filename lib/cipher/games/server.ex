@@ -84,7 +84,6 @@ defmodule Cipher.Games.Server do
     {:reply, {:error, {:game_not_active, status}}, state, @idle_timeout}
   end
 
-  # Handle MapSet guess (from LiveView/TUI - already converted)
   @impl true
   def handle_call({:guess, %MapSet{} = guess}, _from, state) do
     Logger.info("[#{state.id}] Guess data : #{inspect(guess)}")
@@ -104,44 +103,6 @@ defmodule Cipher.Games.Server do
       true ->
         Logger.info("[#{state.id}] Guess incorrect (matches: #{matches})")
         {:reply, {:ok, Map.drop(updated_state, [:secret])}, updated_state, @idle_timeout}
-    end
-  end
-
-  # Handle string map guess (from HTTP API - needs conversion)
-  @impl true
-  def handle_call({:guess, guess_data}, _from, state) when is_map(guess_data) do
-    with {:ok, guess} <- Logic.convert_guess_from_strings(guess_data, state.difficulty) do
-      matches = Logic.calculate_matches(guess, state.secret)
-      secret_size = MapSet.size(state.secret)
-
-      updated_state = %{
-        state
-        | guesses: [{guess, matches} | state.guesses],
-          last_matches: matches
-      }
-
-      new_status = if matches == secret_size, do: :won, else: :active
-
-      final_state = %{updated_state | status: new_status}
-
-      Logger.info(
-        "[#{state.id}] Guess #{if new_status == :won, do: "correct", else: "incorrect"} (matches: #{matches})"
-      )
-
-      filtered_state = Map.drop(final_state, [:secret])
-      {:reply, {:ok, filtered_state}, final_state, @idle_timeout}
-    else
-      {:error, {:invalid_choice, kind, value}} ->
-        Logger.warning("[#{state.id}] Invalid #{kind}: #{value}")
-        {:reply, {:error, {:invalid_choice, kind, value}}, state, @idle_timeout}
-
-      {:error, {:missing_field, kind}} ->
-        Logger.warning("[#{state.id}] Missing field: #{kind}")
-        {:reply, {:error, {:missing_field, kind}}, state, @idle_timeout}
-
-      {:error, {:invalid_format, kind}} ->
-        Logger.warning("[#{state.id}] Invalid format for #{kind}")
-        {:reply, {:error, {:invalid_format, kind}}, state, @idle_timeout}
     end
   end
 

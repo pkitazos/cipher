@@ -6,7 +6,7 @@ defmodule Cipher.Games do
   import Ecto.Query, warn: false
   alias Cipher.Repo
   alias Cipher.Game, as: GameDTO
-  alias Cipher.Games.{Game, Guess, Logic, Server, Choice}
+  alias Cipher.Games.{Game, Guess, Logic, Server}
 
   # --- Game Lifecycle (Creation & Progression) ---
 
@@ -270,21 +270,6 @@ defmodule Cipher.Games do
     Game
     |> Repo.get!(id)
     |> Repo.preload(guesses: from(g in Guess, order_by: [desc: g.inserted_at]))
-  end
-
-  # --- Helpers ---
-
-  # todo: unsure if this should live here
-  def parse_guess_input(params) do
-    Enum.reduce_while(params, {:ok, %{}}, fn {kind_str, value_str}, {:ok, acc} ->
-      with {:ok, kind_atom} <- Choice.kind_from_string(kind_str),
-           {:ok, choice_struct} <- Choice.from_string(value_str),
-           true <- choice_struct.kind == kind_atom do
-        {:cont, {:ok, Map.put(acc, kind_atom, choice_struct)}}
-      else
-        _ -> {:halt, {:error, :invalid_parameters}}
-      end
-    end)
   end
 
   # --- CRUD ---
