@@ -49,4 +49,35 @@ defmodule CipherWeb.Layouts do
     </div>
     """
   end
+
+  def theme_toggle(assigns) do
+    ~H"""
+    <div class="flex items-center gap-1 rounded-full border-2 border-base-300 bg-base-300 p-0.5">
+      <button
+        class="btn btn-ghost btn-xs btn-circle"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="system"
+        title="System theme"
+      >
+        <.icon name="hero-computer-desktop-micro" class="size-4" />
+      </button>
+      <button
+        class="btn btn-ghost btn-xs btn-circle"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="light"
+        title="Light theme"
+      >
+        <.icon name="hero-sun-micro" class="size-4" />
+      </button>
+      <button
+        class="btn btn-ghost btn-xs btn-circle"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="dark"
+        title="Dark theme"
+      >
+        <.icon name="hero-moon-micro" class="size-4" />
+      </button>
+    </div>
+    """
+  end
 end

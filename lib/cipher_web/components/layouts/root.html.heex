@@ -9,9 +9,10 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class="bg-zinc-900 text-white">
+  <body class="bg-base-100 text-base-content">
     <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
       <%= if @current_scope do %>
+        <li><.theme_toggle /></li>
         <li>
           {@current_scope.user.email}
         </li>
@@ -33,3 +34,12 @@
     {@inner_content}
   </body>
 </html>
+<script>
+  (function() {
+    var pref = localStorage.getItem("theme") || "system";
+    var theme = pref === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : pref;
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
