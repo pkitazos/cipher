@@ -10,7 +10,7 @@ defmodule CipherWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto flex-1">
       <.flash_group flash={@flash} id="flash-group" />
       {render_slot(@inner_block)}
     </main>

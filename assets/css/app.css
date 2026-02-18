@@ -58,8 +58,9 @@
 }
 
 :root,
-[data-theme="myCoolTheme"],
-[data-theme="light"] {
+[data-theme="myCoolTheme"] {
+    --color-muted: oklch(94% 0 0);
+    --color-muted-foreground: oklch(50% 0 0);
     --choice-red-fill: #fca5a5;
     --choice-red-stroke: #dc2626;
     --choice-green-fill: #86efac;
@@ -71,6 +72,8 @@
 }
 
 [data-theme="dark"] {
+    --color-muted: oklch(20% 0 0);
+    --color-muted-foreground: oklch(60% 0 0);
     --choice-red-fill: #991b1b;
     --choice-red-stroke: #fca5a5;
     --choice-green-fill: #14532d;

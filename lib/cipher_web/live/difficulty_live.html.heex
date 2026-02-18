@@ -1,46 +1,71 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div class="max-w-md mx-auto text-center flex flex-col gap-8 justify-center items-center">
-    <h1 class="text-3xl font-bold mb-8">Cipher</h1>
-
-    <div class="flex flex-row gap-2">
-      <.button
-        phx-click="set_difficulty"
-        phx-value-difficulty="easy"
-        class={[
-          "btn w-24 cursor-pointer",
-          if(@difficulty == :easy, do: "btn-primary", else: "btn-soft btn-primary")
-        ]}
-      >
-        easy
-      </.button>
-      <.button
-        phx-click="set_difficulty"
-        phx-value-difficulty="normal"
-        class={[
-          "btn w-24 cursor-pointer",
-          if(@difficulty == :normal, do: "btn-primary", else: "btn-soft btn-primary")
-        ]}
-      >
-        normal
-      </.button>
-      <.button
-        phx-click="set_difficulty"
-        phx-value-difficulty="hard"
-        class={[
-          "btn w-24 cursor-pointer",
-          if(@difficulty == :hard, do: "btn-primary", else: "btn-soft btn-primary")
-        ]}
-      >
-        hard
-      </.button>
+  <section class="max-w-md flex mx-auto h-full items-center justify-center flex-col gap-8">
+    <div class="w-full space-y-8">
+      <div class="text-center space-y-2">
+        <h1 class="text-5xl md:text-6xl font-bold tracking-tight font-mono">
+          Cipher
+        </h1>
+        <p class="text-gray-500 text-sm md:text-base">
+          A deduction puzzle game
+        </p>
+      </div>
     </div>
 
+    <div class="w-full flex flex-col space-y-6">
+      <label class="mb- text-sm font-medium text-gray-500 uppercase tracking-wide">
+        Select Difficulty
+      </label>
+      <div class="grid grid-cols-3 gap-3">
+        <.button
+          :for={difficulty <- ["easy", "normal", "hard"]}
+          phx-click="set_difficulty"
+          phx-value-difficulty={difficulty}
+          class={[
+            "btn px-4 py-6 font-medium font-mono text-base transition-all ",
+            if(@difficulty == String.to_atom(difficulty),
+              do: "btn-primary shadow-lg shadow-primary/50",
+              else: "btn-soft btn-primary"
+            )
+          ]}
+        >
+          {difficulty}
+        </.button>
+      </div>
+      <div class="text-xs text-gray-500 space-y-1">
+        <p>
+          <span class="font-medium">Easy:</span>{" "} 3 categories (Shape, Colour, Pattern)
+        </p>
+        <p>
+          <span class="font-medium">Normal:</span>{" "} 4 categories (+ Direction)
+        </p>
+        <p>
+          <span class="font-medium">Hard:</span>{" "} 5 categories (+ Size)
+        </p>
+      </div>
+    </div>
     <.button
       disabled={@difficulty == nil}
       phx-click="start_game"
-      class="w-76 btn btn-neutral cursor-pointer disabled:cursor-not-allowed"
+      class="w-full btn btn-accent btn-lg cursor-pointer disabled:cursor-not-allowed py-7 transition-colors shadow-lg font-mono"
     >
       Start Game
     </.button>
-  </div>
+    <div class="w-full border border-base-300 rounded-lg p-4 space-y-2">
+      <h2 class="font-semibold text-sm font-mono">How to Play</h2>
+      <ul class="text-xs text-gray-500 space-y-1 ml-1 leading-relaxed">
+        <li><kbd class="kbd kbd-sm mr-1">CPU</kbd> picks a secret combination</li>
+        <li>
+          <kbd class="kbd kbd-sm mr-1 text-primary">You</kbd>
+          make guesses by selecting one option per category
+        </li>
+        <li>
+          <kbd class="kbd kbd-sm mr-1">CPU</kbd> tells you how many items match (not which ones)
+        </li>
+        <li>
+          <kbd class="kbd kbd-sm mr-1 text-primary">You</kbd>
+          use deduction to crack the code in fewest guesses
+        </li>
+      </ul>
+    </div>
+  </section>
 </Layouts.app>
