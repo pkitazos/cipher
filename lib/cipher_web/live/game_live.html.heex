@@ -12,7 +12,7 @@
       <.button
         :if={@game.status != :active}
         phx-click="new_game"
-        class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
+        class="btn btn-accent"
       >
         New Game
       </.button>
@@ -20,7 +20,7 @@
         :if={@game.status == :won}
         disabled={@game.difficulty == :hard}
         phx-click="level_up"
-        class="bg-black text-white hover:bg-zinc-950/70 cursor-pointer"
+        class="btn btn-accent"
       >
         Level Up
       </.button>
@@ -36,11 +36,11 @@
       >
         <div
           :for={choice_struct <- sort_guess(guess_set)}
-          class="grid place-items-center size-10 rounded-md bg-slate-800 text-white"
+          class="grid place-items-center btn btn-square bg-base-100 cursor-default"
         >
-          {Choice.show(choice_struct)}
+          <ChoiceComponents.icon choice={choice_struct} />
         </div>
-        <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
+        <div class="grid place-items-center btn btn-square cursor-default">
           {matches}
         </div>
       </div>
@@ -52,8 +52,12 @@
           :for={kind <- Logic.get_active_categories(@game.difficulty)}
           class="flex flex-col gap-2"
         >
-          <div class="grid place-items-center size-10 rounded-md bg-slate-700 text-white">
-            {if(@guess[kind], do: Choice.show(@guess[kind]))}
+          <div
+            phx-click="deselect_choice"
+            phx-value-kind={kind}
+            class="grid place-items-center btn btn-soft btn-square"
+          >
+            <ChoiceComponents.icon :if={@guess[kind]} choice={@guess[kind]} />
           </div>
 
           <button
@@ -63,14 +67,14 @@
             phx-value-kind={kind}
             phx-value-choice={choice_struct.name}
             class={[
-              "grid place-items-center size-10 rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed",
+              "btn btn-square grid place-items-center",
               if(@guess[kind] && @guess[kind].name == choice_struct.name,
-                do: "bg-blue-600 text-white",
-                else: "bg-slate-800 text-zinc-400 hover:bg-slate-600"
+                do: "btn-accent",
+                else: "bg-base-300"
               )
             ]}
           >
-            {Choice.show(choice_struct)}
+            <ChoiceComponents.icon choice={choice_struct} />
           </button>
         </div>
       </div>
@@ -78,7 +82,7 @@
       <.button
         disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty))}
         phx-click="make_guess"
-        class="bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed mt-4 w-full cursor-pointer"
+        class="btn btn-primary disabled:cursor-not-allowed mt-4 w-full cursor-pointer"
       >
         Submit Guess
       </.button>

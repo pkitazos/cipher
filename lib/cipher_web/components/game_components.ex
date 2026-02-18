@@ -5,16 +5,16 @@ defmodule CipherWeb.GameComponents do
 
   def game_status_card(assigns) do
     ~H"""
-    <div class="flex flex-col items-center mt-8 p-4 bg-slate-600 rounded min-w-40">
-      <p class="text-sm text-slate-300">Game ID</p>
+    <div class="flex flex-col items-center mt-8 p-4 alert alert-soft min-w-40">
+      <p class="text-sm">Game ID</p>
       <p class="font-mono text-lg">{@game.id}</p>
 
-      <p class="mt-4 text-sm text-slate-300">Difficulty</p>
+      <p class="mt-4 text-sm">Difficulty</p>
       <p class={["font-mono text-lg", difficulty_class(@game.difficulty)]}>
         {@game.difficulty}
       </p>
 
-      <p class="mt-4 text-sm text-slate-300">Status</p>
+      <p class="mt-4 text-sm">Status</p>
       <p class={["font-mono text-lg", status_class(@game.status)]}>
         {@game.status}
       </p>

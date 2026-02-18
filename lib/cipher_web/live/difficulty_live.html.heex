@@ -7,8 +7,8 @@
         phx-click="set_difficulty"
         phx-value-difficulty="easy"
         class={[
-          "w-24 text-white cursor-pointer",
-          if(@difficulty == :easy, do: "bg-violet-800", else: "bg-zinc-700")
+          "btn w-24 cursor-pointer",
+          if(@difficulty == :easy, do: "btn-primary", else: "btn-soft btn-primary")
         ]}
       >
         easy
@@ -17,8 +17,8 @@
         phx-click="set_difficulty"
         phx-value-difficulty="normal"
         class={[
-          "w-24 text-white cursor-pointer",
-          if(@difficulty == :normal, do: "bg-violet-800", else: "bg-zinc-700")
+          "btn w-24 cursor-pointer",
+          if(@difficulty == :normal, do: "btn-primary", else: "btn-soft btn-primary")
         ]}
       >
         normal
@@ -27,8 +27,8 @@
         phx-click="set_difficulty"
         phx-value-difficulty="hard"
         class={[
-          "w-24 text-white cursor-pointer",
-          if(@difficulty == :hard, do: "bg-violet-800", else: "bg-zinc-700")
+          "btn w-24 cursor-pointer",
+          if(@difficulty == :hard, do: "btn-primary", else: "btn-soft btn-primary")
         ]}
       >
         hard
@@ -38,7 +38,7 @@
     <.button
       disabled={@difficulty == nil}
       phx-click="start_game"
-      class="w-76 bg-black text-white disabled:bg-zinc-600 disabled:cursor-not-allowed disabled:hover:bg-zinc-600 cursor-pointer"
+      class="w-76 btn btn-neutral cursor-pointer disabled:cursor-not-allowed"
     >
       Start Game
     </.button>

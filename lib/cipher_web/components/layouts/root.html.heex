@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <title>Cipher</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href={~p"/favicon-white.svg"}
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href={~p"/favicon-black.svg"}
+      media="(prefers-color-scheme: light)"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
@@ -38,7 +50,7 @@
   (function() {
     var pref = localStorage.getItem("theme") || "system";
     var theme = pref === "system"
-      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "myCoolTheme")
       : pref;
     document.documentElement.setAttribute("data-theme", theme);
   })();

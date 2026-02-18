@@ -25,7 +25,7 @@ function applyTheme(preference) {
     preference === "system"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
-        : "light"
+        : "myCoolTheme"
       : preference;
 
   document.documentElement.setAttribute("data-theme", theme);

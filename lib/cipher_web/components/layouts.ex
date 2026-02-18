@@ -64,7 +64,7 @@ defmodule CipherWeb.Layouts do
       <button
         class="btn btn-ghost btn-xs btn-circle"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="light"
+        data-phx-theme="myCoolTheme"
         title="Light theme"
       >
         <.icon name="hero-sun-micro" class="size-4" />

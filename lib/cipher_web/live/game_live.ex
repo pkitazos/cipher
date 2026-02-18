@@ -3,6 +3,7 @@ defmodule CipherWeb.GameLive do
 
   alias CipherWeb.Layouts
   alias CipherWeb.GameComponents
+  alias CipherWeb.ChoiceComponents
 
   alias Cipher.Games
   alias Cipher.Games.{Choice, Logic}
@@ -29,6 +30,14 @@ defmodule CipherWeb.GameLive do
       |> Choice.from_name()
 
     updated_guess = Map.put(socket.assigns.guess, kind, choice)
+
+    {:noreply, assign(socket, guess: updated_guess)}
+  end
+
+  def handle_event("deselect_choice", %{"kind" => kind_str}, socket) do
+    kind = String.to_existing_atom(kind_str)
+
+    updated_guess = Map.delete(socket.assigns.guess, kind)
 
     {:noreply, assign(socket, guess: updated_guess)}
   end
