@@ -63,6 +63,7 @@ defmodule CipherWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
+      live "/users/history", UserLive.History, :index
     end
 
     post "/users/log-in", UserSessionController, :create
@@ -74,5 +75,11 @@ defmodule CipherWeb.Router do
       pipe_through :browser
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  scope "/", CipherWeb do
+    pipe_through :browser
+
+    match :*, "/*path", PageController, :not_found
   end
 end
