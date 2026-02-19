@@ -1,4 +1,6 @@
 defmodule CipherWeb.GameComponents do
+  alias CipherWeb.ChoiceComponents
+  alias Cipher.Games.Choice
   use Phoenix.Component
 
   attr :game, Cipher.Game, required: true
@@ -18,6 +20,30 @@ defmodule CipherWeb.GameComponents do
       <p class={["font-mono text-lg", status_class(@game.status)]}>
         {@game.status}
       </p>
+    </div>
+    """
+  end
+
+  attr :index, :integer, required: true
+  attr :guess, Cipher.Guess, required: true
+
+  def guess_row(assigns) do
+    ~H"""
+    <div class="w-full flex items-center flex-row justify-between p-3 gap-2 bg-[#f9f9f8] rounded-md border border-gray-500/30">
+      <span class="text-xs font-mono text-gray-500/30 w-6">
+        #{@index}
+      </span>
+      <div class="flex gap-1.5 flex-1 items-center">
+        <div
+          :for={choice <- Enum.sort(@guess.choices, &Choice.compare/2)}
+          class="size-8 badge badge-soft flex items-center justify-center"
+        >
+          <ChoiceComponents.icon choice={choice} />
+        </div>
+      </div>
+      <div class="flex items-center justify-center size-10 rounded-lg badge badge-accent font-bold">
+        {@guess.matches}
+      </div>
     </div>
     """
   end

@@ -2,6 +2,13 @@
 
 ## LiveView Frontend Development Plan
 
+- [ ] change colours
+- [ ] make icons in hisoty larger
+- [ ] move the help icon somewhere
+- [ ] figure out how to get the tooltip and popover to not class
+- [ ] make the labels in the current guess area either fainter or tooltips
+- [ ] test layout where categories are grouped horizontally rather than vertically
+
 ### Phase 1: Setup (COMPLETED)
 - [x] Add dependencies (phoenix_live_view, phoenix_html, esbuild, tailwind)
 - [x] Configure asset pipeline in config.exs and dev.exs
@@ -34,22 +41,21 @@
   - [x] Show "New Game" and "Level Up" buttons when won
 - [ ] **Implement "New Game" functionality**
   - [x] Add "New Game" button (visible when not active)
-  - [ ] Handle "new_game" event in GameLive (currently using href link)
+  - [x] Handle "new_game" event in GameLive (currently using href link)
         make this a button which abandons the current game, and then pushes the "/" route
-  - [ ] Call `Games.Server.abandon_game/1` to clean up current game process
+  - [x] Call `Games.Server.abandon_game/1` to clean up current game process
   - [x] Navigate to "/" (DifficultyLive)
 - [x] **Implement "Level Up" functionality**
   - [x] Add "Level Up" button (only visible when game is won, not at max difficulty)
   - [x] Handle "level_up" event in GameLive
   - [x] Call `Games.level_up/1` to create new game at next difficulty
   - [x] Navigate to "/game/:new_game_id" using `push_navigate/2`
-  - [ ] Show appropriate error if player hasn't won yet
   - [ ] Show appropriate message if already at max difficulty
 
 ### Phase 5: Polish & Styling
-- [ ] Style the game board with Tailwind
+- [x] Style the game board with Tailwind
 - [ ] Add visual feedback and transitions
-- [ ] Mobile-responsive design
+- [x] Mobile-responsive design
 
 ---
 

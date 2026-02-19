@@ -1,4 +1,5 @@
 defmodule CipherWeb.GameLive do
+  require Logger
   use CipherWeb, :live_view
 
   alias CipherWeb.Layouts
@@ -11,6 +12,7 @@ defmodule CipherWeb.GameLive do
   def mount(%{"game_id" => id}, _session, socket) do
     case Games.get_running_game(String.to_integer(id)) do
       {:ok, game} ->
+        Logger.debug("[game status is] #{game.status}")
         {:ok, assign(socket, game: game, guess: %{})}
 
       {:error, :not_found} ->
