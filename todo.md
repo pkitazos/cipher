@@ -2,10 +2,10 @@
 
 ## LiveView Frontend Development Plan
 
-- [ ] change colours
-- [ ] make icons in hisoty larger
-- [ ] move the help icon somewhere
-- [ ] figure out how to get the tooltip and popover to not class
+- [x] change colours
+- [x] make icons in history larger
+- [x] move the help icon somewhere
+- [x] figure out how to get the tooltip and popover to not clash
 - [ ] make the labels in the current guess area either fainter or tooltips
 - [ ] test layout where categories are grouped horizontally rather than vertically
 

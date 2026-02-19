@@ -11,8 +11,8 @@ defmodule CipherWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="w-full border-b border-base-300">
-      <div class="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+    <header class="h-16 w-full border-b border-base-300 bg-base-100 dark:bg-base-100 items-center flex">
+      <div class="max-w-7xl w-full mx-auto px-4 flex items-center justify-between my-auto">
         <.link navigate={~p"/"} class="text-xl font-bold text-base-content font-mono">
           Cipher
         </.link>
@@ -53,7 +53,7 @@ defmodule CipherWeb.Layouts do
       </div>
       <div
         tabindex="0"
-        class="dropdown-content z-20 w-56 p-2 shadow-lg bg-base-100 border border-base-300 rounded-lg"
+        class="dropdown-content z-20 w-56 p-2 shadow-lg bg-base-300 border border-base-300 rounded-lg"
       >
         <%= if @current_scope do %>
           <div class="px-3 py-2">
