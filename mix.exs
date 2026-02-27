@@ -61,7 +61,8 @@ defmodule Cipher.MixProject do
       {:phoenix_ecto, "~> 4.6"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:swoosh, "~> 1.4"}
+      {:swoosh, "~> 1.4"},
+      {:resend, "~> 0.4"}
     ]
   end
 

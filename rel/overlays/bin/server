@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+/app/bin/cipher eval "Cipher.Release.migrate()"
+
+exec /app/bin/cipher start

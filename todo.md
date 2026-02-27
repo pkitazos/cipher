@@ -51,11 +51,17 @@
   - [x] Call `Games.level_up/1` to create new game at next difficulty
   - [x] Navigate to "/game/:new_game_id" using `push_navigate/2`
   - [ ] Show appropriate message if already at max difficulty
+- [ ] **Error pages** - since we manually added LiveView on top of what started as an API project error pages don't render correctly in the browser
+  - [x] 404
+  - [ ] 500
+
 
 ### Phase 5: Polish & Styling
 - [x] Style the game board with Tailwind
-- [ ] Add visual feedback and transitions
+- [ ] Add visual feedback and transitions (probably needs Svelte/Alpine for nicer interactivity)
 - [x] Mobile-responsive design
+
+
 
 ---
 
