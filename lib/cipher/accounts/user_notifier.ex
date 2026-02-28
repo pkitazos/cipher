@@ -9,7 +9,7 @@ defmodule Cipher.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Cipher", "contact@example.com"})
+      |> from({"Cipher", "noreply@pkit.dev"})
       |> subject(subject)
       |> text_body(body)
 
