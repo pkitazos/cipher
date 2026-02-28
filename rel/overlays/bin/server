@@ -1,6 +1,6 @@
 #!/bin/sh
-set -e
+set -eu
 
-/app/bin/cipher eval "Cipher.Release.migrate()"
-
-exec /app/bin/cipher start
+cd -P -- "$(dirname -- "$0")"
+./cipher eval Cipher.Release.migrate
+PHX_SERVER=true exec ./cipher start
