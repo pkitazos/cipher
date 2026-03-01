@@ -105,6 +105,39 @@ defmodule Cipher.GamesTest do
     end
   end
 
+  describe "level_up/2" do
+    setup do
+      session_id = Ecto.UUID.generate()
+      %{session_id: session_id}
+    end
+
+    defp win_game(session_id, game_id) do
+      {:ok, state} = Games.get_internal_state(game_id)
+      guess_map = state.secret |> MapSet.to_list() |> Map.new(&{&1.kind, &1})
+      {:ok, _} = Games.make_guess(session_id, game_id, guess_map)
+    end
+
+    test "easy → normal", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :easy)
+      win_game(session_id, game.id)
+      assert {:ok, new_game} = Games.level_up(session_id, game.id)
+      assert new_game.difficulty == :normal
+    end
+
+    test "normal → hard", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :normal)
+      win_game(session_id, game.id)
+      assert {:ok, new_game} = Games.level_up(session_id, game.id)
+      assert new_game.difficulty == :hard
+    end
+
+    test "error at max difficulty", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :hard)
+      win_game(session_id, game.id)
+      assert {:error, :max_difficulty} = Games.level_up(session_id, game.id)
+    end
+  end
+
   describe "guesses" do
     alias Cipher.Games.Guess
 

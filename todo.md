@@ -18,10 +18,10 @@
 - [x] [B2] abandon_game/1: error when game not found
 - [x] [B3] abandon_game/1: process actually stops
 - [x] [B4] abandon_game/1: abandoned state retrievable before stop
-- [ ] [B5] level_up/1: easy → normal
-- [ ] [B6] level_up/1: normal → hard
-- [ ] [B7] level_up/1: error at max difficulty (hard)
-- [ ] [B8] level_up/1: error when game not yet won
+- [x] [B5] level_up/1: easy → normal
+- [x] [B6] level_up/1: normal → hard
+- [x] [B7] level_up/1: error at max difficulty (hard)
+- [x] [B8] level_up/1: error when game not yet won
 - [ ] [B9] level_up/1: old process is stopped
 - [ ] [B10] level_up/1: new game has correct difficulty
 - [ ] [B11] level_up/1: new game has fresh secret

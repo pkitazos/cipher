@@ -273,6 +273,18 @@ defmodule Cipher.Games do
     end
   end
 
+  if Mix.env() == :test do
+    @doc """
+    Test-only function to get the full internal game state including secret.
+
+    DO NOT use in production code or from controllers/LiveView.
+    Use `get_running_game/1` instead, which filters the secret.
+    """
+    def get_internal_state(game_id) do
+      Server.get_internal_state(game_id)
+    end
+  end
+
   defp restore_game_session(game_id) do
     case get_game_with_history(game_id) do
       nil ->
