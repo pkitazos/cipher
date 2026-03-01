@@ -79,18 +79,29 @@ defmodule Cipher.GamesTest do
       %{game_id: game.id, pid: pid, session_id: session_id}
     end
 
-    test "returns {:ok, state} and process stops", %{game_id: game_id, pid: pid, session_id: session_id} do
+    test "returns {:ok, state} and process stops", %{
+      game_id: game_id,
+      pid: pid,
+      session_id: session_id
+    } do
       assert {:ok, state} = Games.abandon_game(session_id, game_id)
       assert state.id == game_id
       refute Process.alive?(pid)
     end
 
-    test "marks an active game as :abandoned in the DB", %{game_id: game_id, session_id: session_id} do
+    test "marks an active game as :abandoned in the DB", %{
+      game_id: game_id,
+      session_id: session_id
+    } do
       Games.abandon_game(session_id, game_id)
       assert Games.get_game!(game_id).status == :abandoned
     end
 
-    test "returns {:ok, state} with status :abandoned", %{game_id: game_id, pid: pid, session_id: session_id} do
+    test "returns {:ok, state} with status :abandoned", %{
+      game_id: game_id,
+      pid: pid,
+      session_id: session_id
+    } do
       {:ok, state} = Games.abandon_game(session_id, game_id)
       assert state.status == :abandoned
       refute Process.alive?(pid)
@@ -135,6 +146,34 @@ defmodule Cipher.GamesTest do
       {:ok, game} = Games.start_new_game(session_id, :hard)
       win_game(session_id, game.id)
       assert {:error, :max_difficulty} = Games.level_up(session_id, game.id)
+    end
+
+    test "old process is stopped", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :easy)
+      [{old_pid, _}] = Registry.lookup(Cipher.GameRegistry, game.id)
+      win_game(session_id, game.id)
+      Games.level_up(session_id, game.id)
+      refute Process.alive?(old_pid)
+    end
+
+    test "new game has correct difficulty and starts fresh", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :easy)
+      win_game(session_id, game.id)
+      {:ok, new_game} = Games.level_up(session_id, game.id)
+      assert new_game.id != game.id
+      assert new_game.difficulty == :normal
+      assert new_game.status == :active
+      assert new_game.guesses == []
+    end
+
+    test "new game has a fresh secret", %{session_id: session_id} do
+      {:ok, game} = Games.start_new_game(session_id, :easy)
+      {:ok, old_state} = Games.get_internal_state(game.id)
+      win_game(session_id, game.id)
+      {:ok, new_game} = Games.level_up(session_id, game.id)
+      {:ok, new_state} = Games.get_internal_state(new_game.id)
+      # technically possible to get a collision here
+      refute old_state.secret == new_state.secret
     end
   end
 
