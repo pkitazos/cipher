@@ -70,6 +70,35 @@ defmodule Cipher.GamesTest do
     end
   end
 
+  describe "abandon_game/1" do
+    setup do
+      {:ok, game} = Games.start_new_game("test-session", :normal)
+      [{pid, _}] = Registry.lookup(Cipher.GameRegistry, game.id)
+      %{game_id: game.id, pid: pid}
+    end
+
+    test "returns {:ok, state} and process stops", %{game_id: game_id, pid: pid} do
+      assert {:ok, state} = Games.abandon_game(game_id)
+      assert state.id == game_id
+      refute Process.alive?(pid)
+    end
+
+    test "marks an active game as :abandoned in the DB", %{game_id: game_id} do
+      Games.abandon_game(game_id)
+      assert Games.get_game!(game_id).status == :abandoned
+    end
+
+    test "returns {:ok, state} with status :abandoned", %{game_id: game_id, pid: pid} do
+      {:ok, state} = Games.abandon_game(game_id)
+      assert state.status == :abandoned
+      refute Process.alive?(pid)
+    end
+
+    test "returns {:error, :game_not_found} for a non-existent game_id" do
+      assert {:error, :game_not_found} = Games.abandon_game(0)
+    end
+  end
+
   describe "guesses" do
     alias Cipher.Games.Guess
 

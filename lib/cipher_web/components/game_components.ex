@@ -54,6 +54,6 @@ defmodule CipherWeb.GameComponents do
 
   def status_class(:active), do: "text-lime-500"
   def status_class(:won), do: "text-indigo-400"
-  def status_class(:expired), do: "text-red-500"
+  def status_class(:abandoned), do: "text-red-500"
   def status_class(_), do: "text-gray-500"
 end

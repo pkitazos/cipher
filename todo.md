@@ -14,10 +14,10 @@
 
 ### Tests
 
-- [ ] [B1] abandon_game/1: successful abandonment
-- [ ] [B2] abandon_game/1: error when game not found
-- [ ] [B3] abandon_game/1: process actually stops
-- [ ] [B4] abandon_game/1: abandoned state retrievable before stop
+- [x] [B1] abandon_game/1: successful abandonment
+- [x] [B2] abandon_game/1: error when game not found
+- [x] [B3] abandon_game/1: process actually stops
+- [x] [B4] abandon_game/1: abandoned state retrievable before stop
 - [ ] [B5] level_up/1: easy → normal
 - [ ] [B6] level_up/1: normal → hard
 - [ ] [B7] level_up/1: error at max difficulty (hard)
@@ -28,8 +28,7 @@
 
 ### Cleanup
 
-- [ ] [B12] Remove dead `status_class(:expired)` clause in `game_components.ex:57`
-- [ ] [B13] Update tests to use current status values (`:won` / `:active` / `:abandoned`)
+- [x] [B12] Remove dead `status_class(:expired)` clause in `game_components.ex:57`
 
 ### Security
 

@@ -82,16 +82,19 @@ defmodule Cipher.Games do
   def abandon_game(game_id) do
     case Server.get_client_state(game_id) do
       {:ok, state} ->
-        if state.status == :active do
-          Server.abandon_game(game_id)
-
-          game_record = Repo.get!(Game, game_id)
-          update_game(game_record, %{status: :abandoned})
-        end
+        final_state =
+          if state.status == :active do
+            Server.abandon_game(game_id)
+            game_record = Repo.get!(Game, game_id)
+            update_game(game_record, %{status: :abandoned})
+            %{state | status: :abandoned}
+          else
+            state
+          end
 
         Server.stop(game_id)
 
-        {:ok, state}
+        {:ok, final_state}
 
       {:error, :game_not_found} ->
         case Repo.get(Game, game_id) do
