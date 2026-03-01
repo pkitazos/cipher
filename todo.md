@@ -32,8 +32,10 @@
 
 ### Security
 
-- [ ] [B14] Verify LiveView never receives the game secret
-- [ ] [B15] Verify HTTP API responses never include the game secret
+- [ ] [S1] Migrate game IDs from serial int to UUID
+- [x] [S2] Add ownership checks to all mutating game operations
+- [ ] [S3] Verify LiveView never receives the game secret
+- [ ] [S4] Verify HTTP API responses never include the game secret
 
 ## Database
 

@@ -61,7 +61,7 @@
                 <p class="text-xs text-center text-gray-500/80">{kind}</p>
                 <button
                   :for={choice_struct <- Logic.get_choices_for_category(kind)}
-                  disabled={@game.status != :active}
+                  disabled={@game.status != :active || !@owner?}
                   phx-click="select_choice"
                   phx-value-kind={kind}
                   phx-value-choice={choice_struct.name}
@@ -79,7 +79,7 @@
             </div>
           </div>
           <.button
-            disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty))}
+            disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty)) || !@owner?}
             phx-click="make_guess"
             class="w-full btn btn-accent btn-lg py-7"
           >
@@ -182,7 +182,7 @@
           </button> --%>
           <button
             phx-click="level_up"
-            disabled={@game.difficulty == :hard}
+            disabled={@game.difficulty == :hard || !@owner?}
             class="flex items-center justify-center gap-2 px-4 py-6 btn btn-accent"
           >
             Level Up <.icon name="hero-arrow-right" class="w-4 h-4" />

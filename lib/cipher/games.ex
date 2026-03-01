@@ -49,8 +49,9 @@ defmodule Cipher.Games do
   3. Starts a completely new game instance.
   4. Stops the old game process.
   """
-  def level_up(current_game_id) do
-    with {:ok, current_state} <- Server.get_client_state(current_game_id),
+  def level_up(caller, current_game_id) do
+    with :ok <- verify_owner(caller, current_game_id),
+         {:ok, current_state} <- Server.get_client_state(current_game_id),
          true <- current_state.status == :won,
          {:ok, next_difficulty} <- Logic.next_difficulty(current_state.difficulty) do
       identifier =
@@ -79,22 +80,25 @@ defmodule Cipher.Games do
   - If the game is :active, it marks it as :abandoned and persists that.
   - If the game is already :won or :abandoned, it simply stops the process without changing history.
   """
-  def abandon_game(game_id) do
-    case Server.get_client_state(game_id) do
-      {:ok, state} ->
-        final_state =
-          if state.status == :active do
-            Server.abandon_game(game_id)
-            game_record = Repo.get!(Game, game_id)
-            update_game(game_record, %{status: :abandoned})
-            %{state | status: :abandoned}
-          else
-            state
-          end
+  def abandon_game(caller, game_id) do
+    with :ok <- verify_owner(caller, game_id),
+         {:ok, state} <- Server.get_client_state(game_id) do
+      final_state =
+        if state.status == :active do
+          Server.abandon_game(game_id)
+          game_record = Repo.get!(Game, game_id)
+          update_game(game_record, %{status: :abandoned})
+          %{state | status: :abandoned}
+        else
+          state
+        end
 
-        Server.stop(game_id)
+      Server.stop(game_id)
 
-        {:ok, final_state}
+      {:ok, final_state}
+    else
+      {:error, :unauthorized} ->
+        {:error, :unauthorized}
 
       {:error, :game_not_found} ->
         case Repo.get(Game, game_id) do
@@ -126,24 +130,27 @@ defmodule Cipher.Games do
   Accepts a map of %{kind => %Choice{}} (from the UI)
   and converts it to a MapSet for the Server.
   """
-  def make_guess(game_id, guess_map) do
-    {:ok, game} = get_running_game(game_id)
+  def make_guess(caller, game_id, guess_map) do
+    with :ok <- verify_owner(caller, game_id),
+         {:ok, game} <- get_running_game(game_id) do
+      # convert UI Map -> domain MapSet
+      guess_set =
+        guess_map
+        |> Map.values()
+        |> MapSet.new()
 
-    # convert UI Map -> domain MapSet
-    guess_set =
-      guess_map
-      |> Map.values()
-      |> MapSet.new()
-
-    Repo.transaction(fn ->
-      with :ok <- Logic.validate_guess(guess_set, game.difficulty),
-           {:ok, new_state} <- Server.guess(game_id, guess_set),
-           {:ok, _guess_record} <- persist_turn_outcome(game_id, new_state) do
-        new_state
-      else
-        {:error, reason} -> Repo.rollback(reason)
-      end
-    end)
+      Repo.transaction(fn ->
+        with :ok <- Logic.validate_guess(guess_set, game.difficulty),
+             {:ok, new_state} <- Server.guess(game_id, guess_set),
+             {:ok, _guess_record} <- persist_turn_outcome(game_id, new_state) do
+          new_state
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
+    else
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   defp persist_turn_outcome(game_id, new_state) do
@@ -165,6 +172,25 @@ defmodule Cipher.Games do
       else
         {:ok, guess_record}
       end
+    end
+  end
+
+  # --- Ownership ---
+
+  defp verify_owner(caller, game_id) do
+    case Repo.get(Game, game_id) do
+      nil ->
+        {:error, :game_not_found}
+
+      game ->
+        owner? =
+          case caller do
+            %{id: user_id} -> game.user_id == user_id
+            session_id when is_binary(session_id) -> game.session_id == session_id
+            _ -> false
+          end
+
+        if owner?, do: :ok, else: {:error, :unauthorized}
     end
   end
 

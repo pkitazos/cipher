@@ -31,17 +31,17 @@ defmodule CipherWeb.GameController do
   end
 
   # POST /api/games/:id/guess
-  def make_guess(conn, %{"game_id" => id, "guess" => guess_params}) do
+  def make_guess(conn, %{"game_id" => id, "guess" => guess_params, "session_id" => caller}) do
     with {:ok, guess_map} <- parse_guess_input(guess_params),
          game_id = String.to_integer(id),
-         {:ok, updated_game} <- Games.make_guess(game_id, guess_map) do
+         {:ok, updated_game} <- Games.make_guess(caller, game_id, guess_map) do
       render(conn, :show, game: updated_game)
     end
   end
 
   # POST /api/games/:id/level_up
-  def level_up(conn, %{"game_id" => id}) do
-    with {:ok, new_game_state} <- Games.level_up(id) do
+  def level_up(conn, %{"game_id" => id, "session_id" => caller}) do
+    with {:ok, new_game_state} <- Games.level_up(caller, String.to_integer(id)) do
       render(conn, :show, game: new_game_state)
     end
   end

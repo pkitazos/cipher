@@ -24,7 +24,8 @@ defmodule Cipher.GamesTest do
       valid_attrs = %{
         status: :active,
         difficulty: :normal,
-        secret: [:circle, :red, :vertical_stripes, :top]
+        secret: [:circle, :red, :vertical_stripes, :top],
+        session_id: "test-session"
       }
 
       assert {:ok, %Game{} = game} = Games.create_game(valid_attrs)
@@ -70,32 +71,37 @@ defmodule Cipher.GamesTest do
     end
   end
 
-  describe "abandon_game/1" do
+  describe "abandon_game/2" do
     setup do
-      {:ok, game} = Games.start_new_game("test-session", :normal)
+      session_id = Ecto.UUID.generate()
+      {:ok, game} = Games.start_new_game(session_id, :normal)
       [{pid, _}] = Registry.lookup(Cipher.GameRegistry, game.id)
-      %{game_id: game.id, pid: pid}
+      %{game_id: game.id, pid: pid, session_id: session_id}
     end
 
-    test "returns {:ok, state} and process stops", %{game_id: game_id, pid: pid} do
-      assert {:ok, state} = Games.abandon_game(game_id)
+    test "returns {:ok, state} and process stops", %{game_id: game_id, pid: pid, session_id: session_id} do
+      assert {:ok, state} = Games.abandon_game(session_id, game_id)
       assert state.id == game_id
       refute Process.alive?(pid)
     end
 
-    test "marks an active game as :abandoned in the DB", %{game_id: game_id} do
-      Games.abandon_game(game_id)
+    test "marks an active game as :abandoned in the DB", %{game_id: game_id, session_id: session_id} do
+      Games.abandon_game(session_id, game_id)
       assert Games.get_game!(game_id).status == :abandoned
     end
 
-    test "returns {:ok, state} with status :abandoned", %{game_id: game_id, pid: pid} do
-      {:ok, state} = Games.abandon_game(game_id)
+    test "returns {:ok, state} with status :abandoned", %{game_id: game_id, pid: pid, session_id: session_id} do
+      {:ok, state} = Games.abandon_game(session_id, game_id)
       assert state.status == :abandoned
       refute Process.alive?(pid)
     end
 
-    test "returns {:error, :game_not_found} for a non-existent game_id" do
-      assert {:error, :game_not_found} = Games.abandon_game(0)
+    test "returns {:error, :game_not_found} for a non-existent game_id", %{session_id: session_id} do
+      assert {:error, :game_not_found} = Games.abandon_game(session_id, 0)
+    end
+
+    test "returns {:error, :unauthorized} for wrong caller", %{game_id: game_id} do
+      assert {:error, :unauthorized} = Games.abandon_game(Ecto.UUID.generate(), game_id)
     end
   end
 
