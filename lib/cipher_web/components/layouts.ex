@@ -53,7 +53,7 @@ defmodule CipherWeb.Layouts do
       </div>
       <div
         tabindex="0"
-        class="dropdown-content z-20 w-56 p-2 shadow-lg bg-base-300 border border-base-300 rounded-lg"
+        class="dropdown-content z-20 p-2 shadow-lg bg-base-300 border border-base-300 rounded-lg"
       >
         <%= if @current_scope do %>
           <div class="px-3 py-2">
@@ -88,6 +88,8 @@ defmodule CipherWeb.Layouts do
             </li>
           </ul>
         <% end %>
+        <div class="divider my-1" />
+        <div class="flex justify-center items-center"><.theme_toggle /></div>
       </div>
     </div>
     """
