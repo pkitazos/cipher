@@ -48,12 +48,7 @@ defmodule CipherWeb.GameLive do
   def handle_event("make_guess", _params, %{assigns: %{guess: guess, game: game, caller: caller}} = socket) do
     case Games.make_guess(caller, game.id, guess) do
       {:ok, updated_state} ->
-        flash_message =
-          if updated_state.status == :won,
-            do: "Correct! You won!",
-            else: "You got #{updated_state.last_matches} matches."
-
-        {:noreply, socket |> put_flash(:info, flash_message) |> assign(game: updated_state, guess: %{})}
+        {:noreply, assign(socket, game: updated_state, guess: %{})}
 
       {:error, :unauthorized} ->
         {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}
@@ -66,7 +61,7 @@ defmodule CipherWeb.GameLive do
   def handle_event("level_up", _params, %{assigns: %{game: game, caller: caller}} = socket) do
     case Games.level_up(caller, game.id) do
       {:ok, new_game_state} ->
-        {:noreply, socket |> put_flash(:info, "Level Up! Difficulty: #{new_game_state.difficulty}") |> push_navigate(to: ~p"/game/#{new_game_state.id}")}
+        {:noreply, push_navigate(socket, to: ~p"/game/#{new_game_state.id}")}
 
       {:error, :unauthorized} ->
         {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}
@@ -79,7 +74,7 @@ defmodule CipherWeb.GameLive do
   def handle_event("new_game", _params, %{assigns: %{game: game, caller: caller}} = socket) do
     case Games.abandon_game(caller, game.id) do
       {:ok, _} ->
-        {:noreply, socket |> put_flash(:info, "Leaving current game...") |> push_navigate(to: ~p"/")}
+        {:noreply, push_navigate(socket, to: ~p"/")}
 
       {:error, :unauthorized} ->
         {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}

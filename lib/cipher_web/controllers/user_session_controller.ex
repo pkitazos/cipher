@@ -4,22 +4,13 @@ defmodule CipherWeb.UserSessionController do
   alias Cipher.Accounts
   alias CipherWeb.UserAuth
 
-  def create(conn, %{"_action" => "confirmed"} = params) do
-    create(conn, params, "User confirmed successfully.")
-  end
-
-  def create(conn, params) do
-    create(conn, params, "Welcome back!")
-  end
-
   # magic link login
-  defp create(conn, %{"user" => %{"token" => token} = user_params}, info) do
+  def create(conn, %{"user" => %{"token" => token} = user_params}) do
     case Accounts.login_user_by_magic_link(token) do
       {:ok, {user, tokens_to_disconnect}} ->
         UserAuth.disconnect_sessions(tokens_to_disconnect)
 
         conn
-        |> put_flash(:info, info)
         |> UserAuth.log_in_user(user, user_params)
 
       _ ->
@@ -30,8 +21,6 @@ defmodule CipherWeb.UserSessionController do
   end
 
   def delete(conn, _params) do
-    conn
-    |> put_flash(:info, "Logged out successfully.")
-    |> UserAuth.log_out_user()
+    UserAuth.log_out_user(conn)
   end
 end

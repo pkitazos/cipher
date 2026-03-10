@@ -7,8 +7,12 @@
 - [ ] [F3] Show appropriate message if already at max difficulty (level_up button/UI)
 - [ ] [F4] 500 error page
 - [ ] [F5] Add visual feedback and transitions (probably needs Alpine for nicer interactivity)
-- [ ] [F6] Account dropdown is too wide
-- [ ] [F7] player labels in "How to Play" section are not vertically aligned
+- [x] [F6] Account dropdown is too wide
+- [x] [F7] player labels in "How to Play" section are not vertically aligned
+- [ ] [F8] abandoned game should be marked as such somewhere in the header (currently just appears as readonly)
+- [x] [F9] maybe some toasts are unnecessary
+- [x] [F10] move theme toggle out of settings OR respect system settings
+- [ ] [F11] the match number in history needs some kinda label
 
 ## Backend
 
@@ -22,9 +26,9 @@
 - [x] [B6] level_up/1: normal → hard
 - [x] [B7] level_up/1: error at max difficulty (hard)
 - [x] [B8] level_up/1: error when game not yet won
-- [ ] [B9] level_up/1: old process is stopped
-- [ ] [B10] level_up/1: new game has correct difficulty
-- [ ] [B11] level_up/1: new game has fresh secret
+- [x] [B9] level_up/1: old process is stopped
+- [x] [B10] level_up/1: new game has correct difficulty
+- [x] [B11] level_up/1: new game has fresh secret
 
 ### Cleanup
 
@@ -32,10 +36,10 @@
 
 ### Security
 
-- [ ] [S1] Migrate game IDs from serial int to UUID
+- [ ] [S1] Migrate game IDs from serial int custom IDs (Cipher.Games.Id)
 - [x] [S2] Add ownership checks to all mutating game operations
-- [ ] [S3] Verify LiveView never receives the game secret
-- [ ] [S4] Verify HTTP API responses never include the game secret
+- [x] [S3] Verify LiveView never receives the game secret
+- [x] [S4] Verify HTTP API responses never include the game secret
 
 ## Database
 
