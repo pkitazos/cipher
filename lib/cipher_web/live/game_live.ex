@@ -24,7 +24,7 @@ defmodule CipherWeb.GameLive do
     end
   end
 
-  def handle_event("select_choice", %{"kind" => kind_str, "choice" => choice_name_str}, socket) do
+  def handle_event("toggle_choice", %{"kind" => kind_str, "choice" => choice_name_str}, socket) do
     kind = String.to_existing_atom(kind_str)
 
     choice =
@@ -32,15 +32,12 @@ defmodule CipherWeb.GameLive do
       |> String.to_existing_atom()
       |> Choice.from_name()
 
-    updated_guess = Map.put(socket.assigns.guess, kind, choice)
-
-    {:noreply, assign(socket, guess: updated_guess)}
-  end
-
-  def handle_event("deselect_choice", %{"kind" => kind_str}, socket) do
-    kind = String.to_existing_atom(kind_str)
-
-    updated_guess = Map.delete(socket.assigns.guess, kind)
+    updated_guess =
+      if socket.assigns.guess[kind] && socket.assigns.guess[kind].name == choice.name do
+        Map.delete(socket.assigns.guess, kind)
+      else
+        Map.put(socket.assigns.guess, kind, choice)
+      end
 
     {:noreply, assign(socket, guess: updated_guess)}
   end

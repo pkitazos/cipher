@@ -2,7 +2,6 @@
 
 ## Frontend
 
-- [ ] [F1] make the labels in the current guess area either fainter or tooltips
 - [ ] [F2] test layout where categories are grouped horizontally rather than vertically
 - [ ] [F3] Show appropriate message if already at max difficulty (level_up button/UI)
 - [ ] [F4] 500 error page

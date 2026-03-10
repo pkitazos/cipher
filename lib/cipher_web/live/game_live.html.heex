@@ -1,57 +1,37 @@
 <Layouts.game flash={@flash} current_scope={@current_scope} game={@game}>
   <section class="flex-1 w-full h-full bg-base-200 dark:bg-base-200">
     <%!-- Active Game --%>
-    <div :if={@game.status != :won} class="w-full">
-      <div class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div :if={@game.status != :won} class="w-full h-[calc(100dvh-4rem)]">
+      <div class="max-w-7xl mx-auto p-4 md:p-6 h-full flex flex-col lg:grid lg:grid-cols-3 gap-6">
         <%!-- History --%>
-        <div class="lg:col-span-1 flex flex-col justify-center items-center gap-4 bg-white border rounded-md border-gray-300 p-4 h-max dark:bg-base-100 dark:border-base-300">
-          <h2 class="text-lg font-semibold mr-auto">History</h2>
+        <div class="lg:col-span-1 flex flex-col bg-white border rounded-md border-gray-300 p-4 flex-1 min-h-0 overflow-hidden dark:bg-base-100 dark:border-base-300">
+          <h2 class="text-lg font-semibold flex-shrink-0 mb-4">History</h2>
 
-          <p :if={@game.guesses == []} class="text-base-content/50 text-sm">No guesses yet</p>
+          <div id="history-list" phx-hook="ScrollToBottom" class="flex flex-col items-center gap-4 overflow-y-auto min-h-0 scroll-smooth">
+            <p :if={@game.guesses == []} class="text-base-content/50 text-sm">No guesses yet</p>
 
-          <div
-            :for={{{guess_set, matches}, idx} <- Enum.reverse(@game.guesses) |> Enum.with_index()}
-            class="flex w-full items-center gap-3 p-3 bg-base-200 dark:bg-base-200 rounded-lg border border-gray-300 dark:border-base-300"
-          >
-            <%!-- todo: could probably use <GameComponents.guess_row/> --%>
-            <span class="text-sm font-mono text-base-content/50 w-8">#{idx + 1}</span>
-            <div class="flex gap-1.5 flex-1">
-              <div
-                :for={choice <- sort_guess(guess_set)}
-                class="w-8 h-8 rounded bg-base-300/60 grid place-items-center"
-              >
-                <ChoiceComponents.icon choice={choice} />
+            <div
+              :for={{{guess_set, matches}, idx} <- Enum.reverse(@game.guesses) |> Enum.with_index()}
+              class="flex w-full items-center gap-3 p-3 bg-base-200 dark:bg-base-200 rounded-lg border border-gray-300 dark:border-base-300"
+            >
+              <%!-- todo: could probably use <GameComponents.guess_row/> --%>
+              <span class="text-sm font-mono text-base-content/50 w-8">#{idx + 1}</span>
+              <div class="flex gap-1.5 flex-1">
+                <div
+                  :for={choice <- sort_guess(guess_set)}
+                  class="w-8 h-8 rounded bg-base-300/60 grid place-items-center"
+                >
+                  <ChoiceComponents.icon choice={choice} />
+                </div>
               </div>
-            </div>
-            <div class="h-9 w-9 badge badge-accent bg-accent/25 badge-soft font-bold font-mono">
-              {matches}
+              <div class="h-9 w-9 badge badge-accent bg-accent/25 badge-soft font-bold font-mono">
+                {matches}
+              </div>
             </div>
           </div>
         </div>
 
-        <%!-- Current Guess --%>
-        <div class="lg:col-span-2 space-y-6">
-          <div class="flex flex-col gap-2 h-max lg:py-8 bg-white border rounded-md border-gray-300 dark:bg-base-100 dark:border-base-300 items-center justify-center p-4">
-            <div class="flex gap-2">
-              <div
-                :for={kind <- Logic.get_active_categories(@game.difficulty)}
-                class="flex flex-col gap-2"
-              >
-                <p class="text-xs text-center text-gray-500/80">{kind}</p>
-                <div
-                  phx-click="deselect_choice"
-                  phx-value-kind={kind}
-                  class="grid place-items-center btn btn-soft btn-square btn-lg border-dashed border-2 border-base-300 size-16 dark:border-base-300"
-                >
-                  <ChoiceComponents.icon :if={@guess[kind]} choice={@guess[kind]} />
-                </div>
-              </div>
-            </div>
-            <p class="text-xs text-center text-gray-500/80">
-              Click a selected item to deselect it
-            </p>
-          </div>
-
+        <div class="lg:col-span-2 flex flex-col gap-6 flex-shrink-0">
           <div class="flex flex-col gap-2 bg-white border rounded-md border-gray-300 items-center justify-center p-4 dark:bg-base-100 dark:border-base-300">
             <div class="flex flex-row gap-2">
               <div
@@ -62,7 +42,7 @@
                 <button
                   :for={choice_struct <- Logic.get_choices_for_category(kind)}
                   disabled={@game.status != :active || !@owner?}
-                  phx-click="select_choice"
+                  phx-click="toggle_choice"
                   phx-value-kind={kind}
                   phx-value-choice={choice_struct.name}
                   class={[
@@ -79,7 +59,10 @@
             </div>
           </div>
           <.button
-            disabled={map_size(@guess) != length(Logic.get_active_categories(@game.difficulty)) || !@owner?}
+            disabled={
+              map_size(@guess) != length(Logic.get_active_categories(@game.difficulty)) ||
+                !@owner?
+            }
             phx-click="make_guess"
             class="w-full btn btn-accent btn-lg py-7"
           >
@@ -95,10 +78,10 @@
     <%!-- Win Screen --%>
     <div
       :if={@game.status == :won}
-      class="max-h-[calc(dvh-4rem)] flex items-center justify-center p-4"
+      class="h-[calc(100dvh-4rem)] flex flex-col items-center justify-center p-4 overflow-hidden"
     >
-      <div class="max-w-2xl w-full space-y-8">
-        <div class="text-center space-y-4">
+      <div class="max-w-2xl w-full flex flex-col gap-6 overflow-hidden">
+        <div class="text-center space-y-4 flex-shrink-0">
           <div class="flex justify-center">
             <div class="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center">
               <.icon name="hero-trophy" class="w-10 h-10 text-accent" />
@@ -114,7 +97,7 @@
           </div>
         </div>
 
-        <div class="border border-gray-300 rounded-lg p-6 bg-white dark:bg-base-100 dark:border-base-300">
+        <div class="border border-gray-300 rounded-lg p-6 bg-white flex-shrink-0 dark:bg-base-100 dark:border-base-300">
           <h2 class="text-sm font-semibold text-base-content mb-4 uppercase tracking-wide text-center">
             The Secret Code
           </h2>
@@ -139,11 +122,11 @@
           </div>
         </div>
 
-        <div class="border border-gray-300 rounded-lg p-6 bg-white dark:bg-base-100 dark:border-base-300">
-          <h2 class="text-sm font-semibold text-base-content mb-4 uppercase tracking-wide">
+        <div class="border border-gray-300 rounded-lg p-6 bg-white min-h-0 flex flex-col dark:bg-base-100 dark:border-base-300">
+          <h2 class="text-sm font-semibold text-base-content mb-4 uppercase tracking-wide flex-shrink-0">
             Your Journey
           </h2>
-          <div class="space-y-2 max-h-50 overflow-y-auto">
+          <div class="space-y-2 overflow-y-auto min-h-0">
             <div
               :for={
                 {{guess_set, matches}, idx} <- Enum.reverse(@game.guesses) |> Enum.with_index()
@@ -167,19 +150,13 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3 flex-shrink-0">
           <.link
             navigate={~p"/"}
             class="flex items-center justify-center gap-2 px-4 py-6 btn btn-neutral"
           >
             <.icon name="hero-home" class="w-4 h-4" /> Menu
           </.link>
-          <%!-- <button
-            phx-click="new_game"
-            class="flex items-center justify-center gap-2 px-4 py-6 btn btn-accent btn-soft"
-          >
-            <.icon name="hero-arrow-path" class="w-4 h-4" /> Share
-          </button> --%>
           <button
             phx-click="level_up"
             disabled={@game.difficulty == :hard || !@owner?}
