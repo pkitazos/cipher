@@ -61,25 +61,17 @@
 [data-theme="myCoolTheme"] {
     --color-muted: oklch(94% 0 0);
     --color-muted-foreground: oklch(50% 0 0);
-    --choice-red-fill: #fca5a5;
     --choice-red-stroke: #dc2626;
-    --choice-green-fill: #86efac;
     --choice-green-stroke: #16a34a;
-    --choice-blue-fill: #93c5fd;
     --choice-blue-stroke: #2563eb;
-    --choice-yellow-fill: #fde047;
-    --choice-yellow-stroke: #fbbf24;
+    --choice-yellow-stroke: #facc15;
 }
 
 [data-theme="dark"] {
     --color-muted: oklch(20% 0 0);
     --color-muted-foreground: oklch(60% 0 0);
-    --choice-red-fill: #991b1b;
-    --choice-red-stroke: #fca5a5;
-    --choice-green-fill: #14532d;
-    --choice-green-stroke: #86efac;
-    --choice-blue-fill: #1e3a8a;
-    --choice-blue-stroke: #93c5fd;
-    --choice-yellow-fill: #713f12;
-    --choice-yellow-stroke: #fde047;
+    --choice-red-stroke: #ef4444;
+    --choice-green-stroke: #22c55e;
+    --choice-blue-stroke: #3b82f6;
+    --choice-yellow-stroke: #facc15;
 }

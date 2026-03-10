@@ -115,6 +115,9 @@ defmodule CipherWeb.Layouts do
             <h1 class="text-xl font-bold text-base-content font-mono leading-tight">Cipher</h1>
             <p class="text-xs text-base-content/50">
               Game #{@game.id} · {@game.difficulty}
+              <span :if={@game.status == :abandoned} class="badge badge-sm badge-error badge-soft ml-1">
+                Abandoned
+              </span>
             </p>
           </div>
         </div>
@@ -122,7 +125,7 @@ defmodule CipherWeb.Layouts do
         <div class="flex items-center gap-2">
           <.instructions_dropdown />
 
-          <div class="text-right px-2">
+          <div :if={@game.status == :active} class="text-right px-2">
             <p class="text-xs text-base-content/50">Guesses</p>
             <p class="text-xl font-bold text-base-content leading-tight">
               {length(@game.guesses)}
