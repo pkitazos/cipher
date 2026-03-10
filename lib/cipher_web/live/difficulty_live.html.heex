@@ -52,20 +52,15 @@
     </.button>
     <div class="w-full border border-base-300 bg-base-100 rounded-lg p-4 space-y-2">
       <h2 class="font-semibold text-sm">How to Play</h2>
-      <ul class="text-xs text-gray-500 space-y-1 ml-1 leading-relaxed">
-        <li><kbd class="kbd kbd-sm mr-1">CPU</kbd> picks a secret combination</li>
-        <li>
-          <kbd class="text-center align-middle kbd kbd-sm mr-1 text-primary">You</kbd>
-          make guesses by selecting one option per category
-        </li>
-        <li>
-          <kbd class="text-center align-middle kbd kbd-sm mr-1">CPU</kbd>
-          tells you how many items match (not which ones)
-        </li>
-        <li>
-          <kbd class="text-center align-middle kbd kbd-sm mr-1 text-primary">You</kbd>
-          use deduction to crack the code in fewest guesses
-        </li>
+      <ul class="grid grid-cols-8 items-center text-xs text-gray-500 space-y-1 ml-1 leading-relaxed">
+        <kbd class="col-span-1 kbd kbd-sm mr-1">CPU</kbd>
+        <p class="col-span-7 leading-4">picks a secret combination</p>
+        <kbd class="col-span-1 text-center align-middle kbd kbd-sm mr-1 text-primary">You</kbd>
+        <p class="col-span-7 leading-4">make guesses by selecting one option per category</p>
+        <kbd class="col-span-1 text-center align-middle kbd kbd-sm mr-1">CPU</kbd>
+        <p class="col-span-7 leading-4">tells you how many items match (not which ones)</p>
+        <kbd class="col-span-1 text-center align-middle kbd kbd-sm mr-1 text-primary">You</kbd>
+        <p class="col-span-7 leading-4">use deduction to crack the code in fewest guesses</p>
       </ul>
     </div>
   </section>

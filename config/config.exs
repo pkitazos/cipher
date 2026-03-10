@@ -29,7 +29,7 @@ config :cipher, CipherWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [json: CipherWeb.ErrorJSON],
+    formats: [html: CipherWeb.ErrorHTML, json: CipherWeb.ErrorJSON],
     layout: false
   ],
   pubsub_server: Cipher.PubSub,
