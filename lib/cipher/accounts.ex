@@ -8,6 +8,28 @@ defmodule Cipher.Accounts do
 
   alias Cipher.Accounts.{User, UserToken, UserNotifier}
 
+  ## CRUD
+
+  def create_user(attrs \\ %{}) do
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def list_users do
+    Repo.all(User)
+  end
+
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
   ## Database getters
 
   @doc """

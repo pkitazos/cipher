@@ -3,11 +3,19 @@ defmodule Cipher.Accounts.User do
   import Ecto.Changeset
 
   schema "users" do
+    field(:username, :string)
+    field(:provider, :string)
     field(:email, :string)
     field(:confirmed_at, :utc_datetime)
     field(:authenticated_at, :utc_datetime, virtual: true)
 
     timestamps(type: :utc_datetime)
+  end
+
+  def changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username, :provider, :email])
+    |> validate_required([:username, :provider, :email])
   end
 
   @doc """

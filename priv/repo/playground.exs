@@ -68,7 +68,7 @@ Log.section("\n--- 2. Scenario A: The Completed Game (Easy) ---")
 
 # 2. Cheat: Read the secret from the struct and submit it
 winning_guess = cheat_engine.(game_won)
-{:ok, _result} = Games.make_guess(game_won.id, winning_guess)
+{:ok, _result} = Games.make_guess(alice, game_won.id, winning_guess)
 
 Log.info("Game #{game_won.id} created and won immediately.")
 
@@ -79,7 +79,7 @@ Log.section("\n--- 3. Scenario B: The 'In Progress' Game (Normal) ---")
 
 # 2. Make a wrong guess to populate history
 wrong_guess = dummy_guesser.(:normal)
-{:ok, _result} = Games.make_guess(game_active.id, wrong_guess)
+{:ok, _result} = Games.make_guess(alice, game_active.id, wrong_guess)
 
 Log.info("Game #{game_active.id} created with 1 incorrect guess.")
 
