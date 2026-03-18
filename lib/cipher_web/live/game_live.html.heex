@@ -180,17 +180,7 @@
             phx-hook="CopyToClipboard"
             data-difficulty={@game.difficulty}
             data-secret-size={length(Logic.get_active_categories(@game.difficulty))}
-            data-matches={
-              Jason.encode!(
-                Enum.reverse(@game.guesses)
-                |> Enum.map(fn g ->
-                  g.choices
-                  |> MapSet.to_list()
-                  |> Enum.sort(&Choice.compare/2)
-                  |> Enum.map(& &1.name)
-                end)
-              )
-            }
+            data-matches={Jason.encode!(Enum.reverse(@game.guesses) |> Enum.map(& &1.matches))}
             class="flex items-center justify-center gap-2 px-4 py-6 btn btn-soft btn-accent"
           >
             <.icon name="hero-share" class="w-4 h-4" /> Share
