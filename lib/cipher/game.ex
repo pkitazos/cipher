@@ -22,7 +22,6 @@ defmodule Cipher.Game do
 
   @type difficulty :: :easy | :normal | :hard
   @type status :: :won | :active | :abandoned
-  @type guess_entry :: {MapSet.t(Choice.t()), integer()}
 
   @type t :: %__MODULE__{
           id: integer(),

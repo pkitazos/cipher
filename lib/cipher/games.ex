@@ -5,6 +5,7 @@ defmodule Cipher.Games do
   require Logger
   import Ecto.Query, warn: false
   alias Cipher.Repo
+  alias Cipher.Guess, as: GuessDTO
   alias Cipher.Game, as: GameDTO
   alias Cipher.Games.{Game, Guess, Logic, Server}
 
@@ -127,21 +128,14 @@ defmodule Cipher.Games do
 
   @doc """
   Submits a guess to the running game and persists the result.
-  Accepts a map of %{kind => %Choice{}} (from the UI)
-  and converts it to a MapSet for the Server.
+  Accepts a %Cipher.Guess{} DTO.
   """
-  def make_guess(caller, game_id, guess_map) do
+  def make_guess(caller, game_id, guess) do
     with :ok <- verify_owner(caller, game_id),
          {:ok, game} <- get_running_game(game_id) do
-      # convert UI Map -> domain MapSet
-      guess_set =
-        guess_map
-        |> Map.values()
-        |> MapSet.new()
-
       Repo.transaction(fn ->
-        with :ok <- Logic.validate_guess(guess_set, game.difficulty),
-             {:ok, new_state} <- Server.guess(game_id, guess_set),
+        with :ok <- Logic.validate_guess(guess.choices, game.difficulty),
+             {:ok, new_state} <- Server.guess(game_id, guess),
              {:ok, _guess_record} <- persist_turn_outcome(game_id, new_state) do
           new_state
         else
@@ -154,8 +148,8 @@ defmodule Cipher.Games do
   end
 
   defp persist_turn_outcome(game_id, new_state) do
-    # grab the matches from the new state (head of the list is latest)
-    {guess_set, matches} = hd(new_state.guesses)
+    # grab the latest guess from the new state (head of the list is latest)
+    %GuessDTO{choices: guess_set, matches: matches} = hd(new_state.guesses)
 
     guess_attrs = %{
       game_id: game_id,

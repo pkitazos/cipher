@@ -3,7 +3,7 @@
 ## Frontend
 
 - [x] [F1] game sharing
-- [ ] [F4] 500 error page
+- [x] [F4] 500 error page
 - [ ] [F5] Add visual feedback and transitions (probably needs Alpine for nicer interactivity)
 - [x] [F6] Account dropdown is too wide
 - [x] [F7] player labels in "How to Play" section are not vertically aligned

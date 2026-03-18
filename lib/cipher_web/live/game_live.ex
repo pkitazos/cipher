@@ -6,6 +6,7 @@ defmodule CipherWeb.GameLive do
   alias CipherWeb.ChoiceComponents
 
   alias Cipher.Games
+  alias Cipher.Guess
   alias Cipher.Games.{Choice, Logic}
 
   def mount(%{"game_id" => id}, session, socket) do
@@ -42,13 +43,23 @@ defmodule CipherWeb.GameLive do
     {:noreply, assign(socket, guess: updated_guess)}
   end
 
-  def handle_event("make_guess", _params, %{assigns: %{guess: guess, game: game, caller: caller}} = socket) do
+  def handle_event(
+        "make_guess",
+        _params,
+        %{assigns: %{guess: guess_map, game: game, caller: caller}} = socket
+      ) do
+    # convert UI Map -> domain Guess DTO
+    guess = Guess.new_from_game(game.id, guess_map)
+
     case Games.make_guess(caller, game.id, guess) do
       {:ok, updated_state} ->
         {:noreply, assign(socket, game: updated_state, guess: %{})}
 
       {:error, :unauthorized} ->
-        {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}
+        {:noreply,
+         socket
+         |> put_flash(:error, "You are not the owner of this game.")
+         |> push_navigate(to: ~p"/")}
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Guess failed: #{inspect(reason)}")}
@@ -61,7 +72,10 @@ defmodule CipherWeb.GameLive do
         {:noreply, push_navigate(socket, to: ~p"/game/#{new_game_state.id}")}
 
       {:error, :unauthorized} ->
-        {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}
+        {:noreply,
+         socket
+         |> put_flash(:error, "You are not the owner of this game.")
+         |> push_navigate(to: ~p"/")}
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Failed to level up: #{inspect(reason)}")}
@@ -74,7 +88,10 @@ defmodule CipherWeb.GameLive do
         {:noreply, push_navigate(socket, to: ~p"/")}
 
       {:error, :unauthorized} ->
-        {:noreply, socket |> put_flash(:error, "You are not the owner of this game.") |> push_navigate(to: ~p"/")}
+        {:noreply,
+         socket
+         |> put_flash(:error, "You are not the owner of this game.")
+         |> push_navigate(to: ~p"/")}
 
       {:error, _} ->
         {:noreply, push_navigate(socket, to: ~p"/")}

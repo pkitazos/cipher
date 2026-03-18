@@ -3,6 +3,7 @@ defmodule Cipher.Games.Server do
   require Logger
 
   alias Cipher.Games.Logic
+  alias Cipher.Guess
 
   @idle_timeout :timer.hours(1)
 
@@ -54,8 +55,7 @@ defmodule Cipher.Games.Server do
 
   @impl true
   def init(game) do
-    # The Server calls the Context, and the Context calls the Repo.
-    # This restores the state if the server crashes and restarts.
+    # State is restored by the Context if the server crashes and restarts.
     Logger.info("[#{game.id}] GameServer started for Game ##{game.id}")
     {:ok, game, @idle_timeout}
   end
@@ -85,14 +85,15 @@ defmodule Cipher.Games.Server do
   end
 
   @impl true
-  def handle_call({:guess, %MapSet{} = guess}, _from, state) do
-    Logger.info("[#{state.id}] Guess data : #{inspect(guess)}")
+  def handle_call({:guess, %Guess{choices: choices} = guess}, _from, state) do
+    Logger.info("[#{state.id}] Guess data : #{inspect(choices)}")
     Logger.info("[#{state.id}] Secret : #{inspect(state.secret)}")
 
-    matches = Logic.calculate_matches(guess, state.secret)
+    matches = Logic.calculate_matches(choices, state.secret)
     secret_size = MapSet.size(state.secret)
 
-    updated_state = %{state | guesses: [{guess, matches} | state.guesses], last_matches: matches}
+    updated_guess = %Guess{guess | matches: matches}
+    updated_state = %{state | guesses: [updated_guess | state.guesses], last_matches: matches}
 
     cond do
       matches == secret_size ->

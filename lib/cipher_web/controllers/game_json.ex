@@ -1,6 +1,7 @@
 defmodule CipherWeb.GameJSON do
   alias Cipher.Game
   alias Cipher.Games.Choice
+  alias Cipher.Guess
 
   @doc """
   Renders a single game.
@@ -20,8 +21,8 @@ defmodule CipherWeb.GameJSON do
     }
   end
 
-  # Convert MapSet<Struct> -> List of Objects
-  defp transform_guess({guess_mapset, matches}) do
+  # Convert Guess struct to JSON representation
+  defp transform_guess(%Guess{choices: guess_mapset, matches: matches}) do
     %{
       matches: matches,
       choices:

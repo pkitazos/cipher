@@ -10,7 +10,7 @@ defmodule Cipher.Guess do
   @type t :: %__MODULE__{
           game_id: integer(),
           choices: MapSet.t(Choice.t()),
-          matches: integer()
+          matches: integer() | nil
         }
 
   @doc """
@@ -22,6 +22,21 @@ defmodule Cipher.Guess do
       game_id: db_guess.game_id,
       matches: db_guess.matches,
       choices: inflate_choices(db_guess.choices)
+    }
+  end
+
+  @doc """
+  Converts a UI selection map (%{kind => %Choice{}}) into a Guess DTO.
+  Used at the LiveView boundary before passing to the Games context.
+  """
+  def new_from_game(game_id, guess_map) do
+    %__MODULE__{
+      game_id: game_id,
+      matches: nil,
+      choices:
+        guess_map
+        |> Map.values()
+        |> MapSet.new()
     }
   end
 
